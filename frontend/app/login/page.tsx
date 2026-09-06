@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "@/components/Logo";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -29,8 +27,10 @@ export default function LoginPage() {
       setError(error.message);
       return;
     }
-    router.push("/dashboard");
-    router.refresh();
+    // Hard navigation - see signup/page.tsx for why, same cookie-timing
+    // reasoning applies to a fresh sign-in.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = "/dashboard";
   }
 
   return (

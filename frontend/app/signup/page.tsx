@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "@/components/Logo";
@@ -9,7 +8,6 @@ import Logo from "@/components/Logo";
 type UserType = "mentee" | "mentor";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [userType, setUserType] = useState<UserType>("mentee");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +20,11 @@ export default function SignupPage() {
     setError(null);
 
     const supabase = createClient();
+    // If a previous account's session is still active in this browser (e.g.
+    // logout hasn't fully propagated yet), sign it out first so the new
+    // account's session - not a leftover one - is what ends up active.
+    await supabase.auth.signOut();
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -33,8 +36,11 @@ export default function SignupPage() {
       setError(error.message);
       return;
     }
-    router.push("/onboarding");
-    router.refresh();
+    // A hard navigation, not router.push, so the next page's server render
+    // is guaranteed to see the just-written session cookie rather than a
+    // stale one from a client-side transition that outraces the cookie write.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = "/onboarding";
   }
 
   return (

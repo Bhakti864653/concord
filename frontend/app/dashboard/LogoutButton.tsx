@@ -1,16 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LogoutButton() {
-  const router = useRouter();
-
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
+    // Hard navigation, not router.push - guarantees the next request (and
+    // any immediate sign-up/log-in after it) starts from a server render
+    // that has actually seen the cleared session cookie.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = "/login";
   }
 
   return (
