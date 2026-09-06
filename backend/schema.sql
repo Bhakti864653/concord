@@ -129,3 +129,48 @@ create policy concord_matches_select
   on matches for select
   to authenticated
   using (auth.uid() = mentee_user_id or auth.uid() = mentor_user_id);
+
+-- Direct messages between a matched pair. Written straight from the
+-- frontend (not through the FastAPI backend) - RLS alone fully expresses
+-- the access rule ("only the two people in this match, only as yourself"),
+-- so there's no extra validation a backend round-trip would add. Uses
+-- matches.mentee_user_id as the match's own id throughout, since it's
+-- already unique per match.
+create table messages (
+  id uuid primary key default gen_random_uuid(),
+  match_mentee_id uuid not null references matches(mentee_user_id) on delete cascade,
+  sender_id uuid not null references auth.users(id) on delete cascade,
+  body text not null check (char_length(body) between 1 and 2000),
+  created_at timestamptz not null default now()
+);
+
+create index messages_match_mentee_id_created_at_idx on messages (match_mentee_id, created_at);
+
+alter table messages enable row level security;
+
+create policy "Match participants can read their messages"
+  on messages for select
+  to authenticated
+  using (
+    exists (
+      select 1 from matches m
+      where m.mentee_user_id = messages.match_mentee_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+create policy "Match participants can send messages"
+  on messages for insert
+  to authenticated
+  with check (
+    sender_id = auth.uid()
+    and exists (
+      select 1 from matches m
+      where m.mentee_user_id = messages.match_mentee_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+-- Lets Supabase Realtime broadcast new rows to subscribed clients (the chat
+-- UI listens on this instead of polling).
+alter publication supabase_realtime add table messages;

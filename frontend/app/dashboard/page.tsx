@@ -99,16 +99,22 @@ export default async function DashboardPage() {
           </h2>
           <div className="flex flex-col gap-3">
             {matches.map(({ id, profile }) => (
-              <Link
+              <div
                 key={id}
-                href={`/match/${id}`}
-                className="flex items-center justify-between rounded-lg border border-accord bg-accord-tint p-4 transition-opacity hover:opacity-90"
+                className="flex items-center justify-between rounded-lg border border-accord bg-accord-tint p-4"
               >
                 <p className="font-medium text-ink">
                   {isMentee ? profile.mentors_in : profile.seeking_guidance_on}
                 </p>
-                <span className="text-sm font-medium text-ink underline">View match</span>
-              </Link>
+                <div className="flex items-center gap-4 text-sm font-medium text-ink">
+                  <Link href={`/match/${id}`} className="underline">
+                    View match
+                  </Link>
+                  <Link href={`/match/${id}/chat`} className="underline">
+                    Chat
+                  </Link>
+                </div>
+              </div>
             ))}
           </div>
         </section>
