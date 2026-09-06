@@ -3,7 +3,8 @@ import re
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, field_validator
 
-from .auth import get_user_id
+from .auth import get_user_id, require_admin
+from .gale_shapley import run_gale_shapley
 from .supabase_client import get_admin_client
 
 router = APIRouter()
@@ -186,3 +187,56 @@ def save_mentor_preferences(
         "mentor_preferences", "ranked_mentee_ids", "mentee_profiles", user_id, body
     )
     return {"status": "ok"}
+
+
+@router.post("/matching/run")
+def run_matching(authorization: str | None = Header(default=None)):
+    require_admin(authorization)
+    admin = get_admin_client()
+
+    mentee_rows = (
+        admin.table("mentee_preferences")
+        .select("user_id, ranked_mentor_ids")
+        .eq("locked", True)
+        .execute()
+        .data
+        or []
+    )
+    mentor_rows = (
+        admin.table("mentor_preferences")
+        .select("user_id, ranked_mentee_ids")
+        .eq("locked", True)
+        .execute()
+        .data
+        or []
+    )
+    mentor_capacity_rows = (
+        admin.table("mentor_profiles").select("user_id, availability_count").execute().data
+        or []
+    )
+
+    mentee_prefs = {row["user_id"]: row["ranked_mentor_ids"] for row in mentee_rows}
+    mentor_prefs = {row["user_id"]: row["ranked_mentee_ids"] for row in mentor_rows}
+    mentor_capacity = {
+        row["user_id"]: row["availability_count"] for row in mentor_capacity_rows
+    }
+
+    result = run_gale_shapley(mentee_prefs, mentor_prefs, mentor_capacity)
+
+    # Each run replaces the previous result outright, rather than merging -
+    # a stale match from a prior run (before someone re-locked a new list)
+    # shouldn't linger.
+    admin.table("matches").delete().neq(
+        "mentee_user_id", "00000000-0000-0000-0000-000000000000"
+    ).execute()
+    if result:
+        rows = [
+            {"mentee_user_id": mentee_id, "mentor_user_id": mentor_id}
+            for mentee_id, mentor_id in result.items()
+        ]
+        admin.table("matches").insert(rows).execute()
+
+    return {
+        "matched_count": len(result),
+        "unmatched_mentee_count": len(mentee_prefs) - len(result),
+    }

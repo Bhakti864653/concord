@@ -113,3 +113,19 @@ create policy "Users can update their own mentor preferences"
   to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Result of the most recent Gale-Shapley run. Written only by the backend's
+-- admin client (an admin-gated endpoint, not directly by users), but each
+-- side of a match should be able to see who they were paired with.
+create table matches (
+  mentee_user_id uuid primary key references mentee_profiles(user_id) on delete cascade,
+  mentor_user_id uuid not null references mentor_profiles(user_id) on delete cascade,
+  matched_at timestamptz not null default now()
+);
+
+alter table matches enable row level security;
+
+create policy concord_matches_select
+  on matches for select
+  to authenticated
+  using (auth.uid() = mentee_user_id or auth.uid() = mentor_user_id);
