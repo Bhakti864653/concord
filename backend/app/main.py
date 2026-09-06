@@ -53,5 +53,4 @@ def health():
         "status": "ok",
         "supabase_url_configured": bool(os.getenv("SUPABASE_URL")),
         "supabase_key_configured": bool(os.getenv("SUPABASE_PUBLISHABLE_KEY")),
-        "frontend_origins_debug": [repr(o) for o in frontend_origins],
     }
