@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Wayfind",
+  title: "Concord",
   description: "Mentorship matching, done with real stable matching.",
 };
 

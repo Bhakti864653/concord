@@ -69,7 +69,7 @@ export default async function DashboardPage() {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-gray-600">
-          {userType === "mentee" ? "Mentors" : "Mentees"} on Wayfind
+          {userType === "mentee" ? "Mentors" : "Mentees"} on Concord
         </h2>
         {!others || others.length === 0 ? (
           <p className="text-sm text-gray-500">No one else has joined yet.</p>

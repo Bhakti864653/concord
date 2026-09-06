@@ -1,4 +1,4 @@
--- Run this in the Supabase SQL editor for a new/empty Wayfind project.
+-- Run this in the Supabase SQL editor for a new/empty Concord project.
 -- Kept here for reference; there's no automated migration runner, so this
 -- is the source of truth for what should exist in the database.
 

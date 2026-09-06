@@ -12,9 +12,9 @@ from .profiles import router as profiles_router
 
 load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
-logger = logging.getLogger("wayfind")
+logger = logging.getLogger("concord")
 
-app = FastAPI(title="Wayfind API")
+app = FastAPI(title="Concord API")
 
 app.add_middleware(
     CORSMiddleware,

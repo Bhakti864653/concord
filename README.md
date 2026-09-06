@@ -1,4 +1,4 @@
-# Wayfind
+# Concord
 
 A mentorship-matching platform. Mentees (looking for guidance on a career,
 field, or path) and mentors (who've already walked that path) create
@@ -8,9 +8,11 @@ plain similarity score.
 
 ## Current status
 
-Just the foundation: auth, profile creation for both user types, and the
-row-level security that lets everyone browse profiles but only edit their
-own. The matching engine itself hasn't been built yet.
+Auth, profile creation for both user types, row-level security (everyone
+can browse profiles, only edit their own), and a rule-based match-scoring +
+preference-ranking system (mentees/mentors get a suggested ranking of the
+other side based on tag/field overlap, can reorder it, then lock it in).
+The actual Gale-Shapley matching run itself hasn't been built yet.
 
 ## Stack
 
@@ -27,8 +29,7 @@ project: Next.js (frontend) + FastAPI (backend) + Supabase (Postgres, Auth).
 ### 1. Supabase project
 
 Create a new Supabase project, then run `backend/schema.sql` in its SQL
-editor to create `mentee_profiles`/`mentor_profiles` and their RLS
-policies.
+editor to create the profile/preference tables and their RLS policies.
 
 Grab three values from Project Settings → API:
 - Project URL
