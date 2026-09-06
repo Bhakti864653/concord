@@ -58,6 +58,25 @@ def score_pair(
     return round(TEXT_WEIGHT * text_score + TAG_WEIGHT * tag_score, 4)
 
 
+def explain_match(
+    mentee_text: str | None,
+    mentee_other: str | None,
+    mentee_tags: list[str],
+    mentor_text: str | None,
+    mentor_other: str | None,
+    mentor_tags: list[str],
+) -> dict[str, list[str]]:
+    """The actual words and tags behind a score_pair() result - the whole
+    point of a rule-based score over an LLM/embedding one is that a match
+    can be explained in plain terms, so this is surfaced right alongside
+    the score rather than left implicit in the scoring math."""
+    shared_words = sorted(
+        _tokenize(mentee_text, mentee_other) & _tokenize(mentor_text, mentor_other)
+    )
+    shared_tags = sorted(set(mentee_tags) & set(mentor_tags))
+    return {"shared_words": shared_words, "shared_tags": shared_tags}
+
+
 @router.get("/matching/suggested-mentors")
 def suggested_mentors(
     user_id: str = Depends(rate_limit("suggested-mentors", max_calls=60, window_seconds=3600)),
@@ -81,6 +100,14 @@ def suggested_mentors(
         {
             **m,
             "score": score_pair(
+                mentee["seeking_guidance_on"],
+                mentee.get("other_tag_text"),
+                mentee.get("circumstance_tags") or [],
+                m["mentors_in"],
+                m.get("other_tag_text"),
+                m.get("background_tags") or [],
+            ),
+            "match_reasons": explain_match(
                 mentee["seeking_guidance_on"],
                 mentee.get("other_tag_text"),
                 mentee.get("circumstance_tags") or [],
@@ -118,6 +145,14 @@ def suggested_mentees(
         {
             **mt,
             "score": score_pair(
+                mt["seeking_guidance_on"],
+                mt.get("other_tag_text"),
+                mt.get("circumstance_tags") or [],
+                mentor["mentors_in"],
+                mentor.get("other_tag_text"),
+                mentor.get("background_tags") or [],
+            ),
+            "match_reasons": explain_match(
                 mt["seeking_guidance_on"],
                 mt.get("other_tag_text"),
                 mt.get("circumstance_tags") or [],

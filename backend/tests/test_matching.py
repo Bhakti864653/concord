@@ -3,7 +3,14 @@ from fastapi import HTTPException
 from pydantic import ValidationError
 
 from app import matching
-from app.matching import PreferencesIn, _jaccard, _save_preferences, _tokenize, score_pair
+from app.matching import (
+    PreferencesIn,
+    _jaccard,
+    _save_preferences,
+    _tokenize,
+    explain_match,
+    score_pair,
+)
 
 
 def test_tokenize_lowercases_and_drops_stopwords():
@@ -87,6 +94,28 @@ def test_score_pair_other_tag_text_folds_into_text_overlap():
         "guidance", "robotics", [], "guidance", "robotics", []
     )
     assert score == 0.7
+
+
+def test_explain_match_returns_the_shared_words_and_tags():
+    reasons = explain_match(
+        "breaking into product management",
+        None,
+        ["first-gen", "career-switcher"],
+        "product management coaching",
+        None,
+        ["first-gen"],
+    )
+    assert reasons == {
+        "shared_words": ["management", "product"],
+        "shared_tags": ["first-gen"],
+    }
+
+
+def test_explain_match_is_empty_when_nothing_overlaps():
+    reasons = explain_match(
+        "breaking into product management", None, [], "watercolor painting", None, []
+    )
+    assert reasons == {"shared_words": [], "shared_tags": []}
 
 
 def test_preferences_in_rejects_duplicate_ranked_ids():

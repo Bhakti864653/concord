@@ -2,8 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Logo from "@/components/Logo";
+import { matchReasons } from "@/lib/matchReasons";
+import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
 import LogoutButton from "./LogoutButton";
 import RunMatchButton from "./RunMatchButton";
+
+const TAG_LABELS = new Map(CIRCUMSTANCE_TAGS.map((t) => [t.value, t.label]));
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -61,6 +65,17 @@ export default async function DashboardPage() {
 
   const isAdmin = user.email?.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
 
+  const reasons = matchedProfile
+    ? matchReasons(
+        isMentee ? ownProfile.seeking_guidance_on : matchedProfile.seeking_guidance_on,
+        isMentee ? ownProfile.other_tag_text : matchedProfile.other_tag_text,
+        (isMentee ? ownProfile.circumstance_tags : matchedProfile.circumstance_tags) ?? [],
+        isMentee ? matchedProfile.mentors_in : ownProfile.mentors_in,
+        isMentee ? matchedProfile.other_tag_text : ownProfile.other_tag_text,
+        (isMentee ? matchedProfile.background_tags : ownProfile.background_tags) ?? [],
+      )
+    : null;
+
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 p-6">
       <div className="flex items-center justify-between">
@@ -89,6 +104,14 @@ export default async function DashboardPage() {
             {isMentee ? matchedProfile.mentors_in : matchedProfile.seeking_guidance_on}
           </p>
           <p className="text-sm text-ink/80">{matchedProfile.bio}</p>
+          {reasons && (reasons.sharedWords.length > 0 || reasons.sharedTags.length > 0) && (
+            <p className="text-xs text-ink/70">
+              Matched because you both mentioned{" "}
+              {reasons.sharedWords.slice(0, 4).join(", ") || "similar things"}
+              {reasons.sharedTags.length > 0 &&
+                ` and share ${reasons.sharedTags.map((t) => TAG_LABELS.get(t) ?? t).join(", ")}`}
+            </p>
+          )}
         </section>
       )}
 

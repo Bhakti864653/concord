@@ -10,6 +10,7 @@ type Mentor = {
   bio: string;
   availability_count: number;
   score: number;
+  match_reasons?: { shared_words: string[]; shared_tags: string[] };
 };
 
 export default function MenteeRanking({
@@ -38,6 +39,9 @@ export default function MenteeRanking({
           subtitle: m.bio,
           extra: `Open to ${m.availability_count} mentee${m.availability_count === 1 ? "" : "s"}`,
           score: m.score,
+          matchReasons: m.match_reasons
+            ? { sharedWords: m.match_reasons.shared_words, sharedTags: m.match_reasons.shared_tags }
+            : undefined,
         }));
         setItems(mapped);
 

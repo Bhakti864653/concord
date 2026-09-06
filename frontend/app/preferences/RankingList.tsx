@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
 
 export type RankingItem = {
   id: string;
@@ -8,7 +9,10 @@ export type RankingItem = {
   subtitle: string;
   extra?: string;
   score: number;
+  matchReasons?: { sharedWords: string[]; sharedTags: string[] };
 };
+
+const TAG_LABELS = new Map(CIRCUMSTANCE_TAGS.map((t) => [t.value, t.label]));
 
 export default function RankingList({
   items,
@@ -91,6 +95,18 @@ export default function RankingList({
                 <p className="text-xs font-medium text-accord">
                   Match score: {Math.round(item.score * 100)}%
                 </p>
+                {item.matchReasons &&
+                  (item.matchReasons.sharedWords.length > 0 ||
+                    item.matchReasons.sharedTags.length > 0) && (
+                    <p className="text-xs text-muted">
+                      Matched because you both mentioned{" "}
+                      {item.matchReasons.sharedWords.slice(0, 4).join(", ") || "similar things"}
+                      {item.matchReasons.sharedTags.length > 0 &&
+                        ` and share ${item.matchReasons.sharedTags
+                          .map((t) => TAG_LABELS.get(t) ?? t)
+                          .join(", ")}`}
+                    </p>
+                  )}
               </div>
               {!locked && (
                 <div className="flex flex-col gap-1">

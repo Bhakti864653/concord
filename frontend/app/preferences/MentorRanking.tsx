@@ -9,6 +9,7 @@ type Mentee = {
   seeking_guidance_on: string;
   bio: string;
   score: number;
+  match_reasons?: { shared_words: string[]; shared_tags: string[] };
 };
 
 export default function MentorRanking({
@@ -36,6 +37,9 @@ export default function MentorRanking({
           title: m.seeking_guidance_on,
           subtitle: m.bio,
           score: m.score,
+          matchReasons: m.match_reasons
+            ? { sharedWords: m.match_reasons.shared_words, sharedTags: m.match_reasons.shared_tags }
+            : undefined,
         }));
         setItems(mapped);
 
