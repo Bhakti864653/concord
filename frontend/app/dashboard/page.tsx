@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "./LogoutButton";
@@ -39,7 +40,12 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold">
           Welcome, {userType === "mentee" ? "mentee" : "mentor"}
         </h1>
-        <LogoutButton />
+        <div className="flex items-center gap-4">
+          <Link href="/preferences" className="text-sm underline">
+            Rank your {userType === "mentee" ? "mentors" : "mentees"}
+          </Link>
+          <LogoutButton />
+        </div>
       </div>
 
       <section className="flex flex-col gap-2 rounded border p-4">

@@ -59,3 +59,57 @@ create policy "Users can update their own mentor profile"
   to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Ranked preference lists for Gale-Shapley matching. Unlike profiles,
+-- these are private - a user's own ranking of the other side should never
+-- be visible to anyone but them (and later, the backend's admin client
+-- when the actual matching run happens).
+create table mentee_preferences (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  ranked_mentor_ids uuid[] not null default '{}',
+  locked boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+alter table mentee_preferences enable row level security;
+
+create policy "Users can view their own mentee preferences"
+  on mentee_preferences for select
+  to authenticated
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their own mentee preferences"
+  on mentee_preferences for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+create policy "Users can update their own mentee preferences"
+  on mentee_preferences for update
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create table mentor_preferences (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  ranked_mentee_ids uuid[] not null default '{}',
+  locked boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+alter table mentor_preferences enable row level security;
+
+create policy "Users can view their own mentor preferences"
+  on mentor_preferences for select
+  to authenticated
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their own mentor preferences"
+  on mentor_preferences for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+create policy "Users can update their own mentor preferences"
+  on mentor_preferences for update
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
