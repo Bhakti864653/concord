@@ -2,12 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Logo from "@/components/Logo";
-import { matchReasons } from "@/lib/matchReasons";
-import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
 import LogoutButton from "./LogoutButton";
 import RunMatchButton from "./RunMatchButton";
-
-const TAG_LABELS = new Map(CIRCUMSTANCE_TAGS.map((t) => [t.value, t.label]));
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -41,40 +37,39 @@ export default async function DashboardPage() {
 
   const { data: others } = await supabase.from(browseTable).select("*");
 
+  // A mentee is matched at most once (mentee_user_id is the matches table's
+  // primary key), but a mentor with availability_count > 1 can genuinely
+  // have several - so this reads every match row for the current user
+  // rather than assuming (and erroring on) exactly one.
   const matchColumn = isMentee ? "mentee_user_id" : "mentor_user_id";
   const counterpartTable = isMentee ? "mentor_profiles" : "mentee_profiles";
-  const { data: matchRow } = await supabase
+  const { data: matchRows } = await supabase
     .from("matches")
-    .select(isMentee ? "mentor_user_id" : "mentee_user_id")
-    .eq(matchColumn, user.id)
-    .maybeSingle();
+    .select("mentee_user_id, mentor_user_id")
+    .eq(matchColumn, user.id);
 
-  const counterpartId = matchRow
-    ? isMentee
-      ? (matchRow as { mentor_user_id: string }).mentor_user_id
-      : (matchRow as { mentee_user_id: string }).mentee_user_id
-    : null;
+  const counterpartIds = (matchRows ?? []).map((m) =>
+    isMentee ? m.mentor_user_id : m.mentee_user_id,
+  );
 
-  const { data: matchedProfile } = counterpartId
-    ? await supabase
-        .from(counterpartTable)
-        .select("*")
-        .eq("user_id", counterpartId)
-        .maybeSingle()
-    : { data: null };
+  const { data: matchedProfiles } =
+    counterpartIds.length > 0
+      ? await supabase.from(counterpartTable).select("*").in("user_id", counterpartIds)
+      : { data: [] };
+
+  const profileByUserId = new Map((matchedProfiles ?? []).map((p) => [p.user_id, p]));
+
+  const matches = (matchRows ?? [])
+    .map((m) => ({
+      // mentee_user_id doubles as the match's own id - it's unique per
+      // match even for a mentor with several, since each mentee is only
+      // ever matched once.
+      id: m.mentee_user_id,
+      profile: profileByUserId.get(isMentee ? m.mentor_user_id : m.mentee_user_id),
+    }))
+    .filter((m): m is { id: string; profile: NonNullable<typeof m.profile> } => !!m.profile);
 
   const isAdmin = user.email?.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
-
-  const reasons = matchedProfile
-    ? matchReasons(
-        isMentee ? ownProfile.seeking_guidance_on : matchedProfile.seeking_guidance_on,
-        isMentee ? ownProfile.other_tag_text : matchedProfile.other_tag_text,
-        (isMentee ? ownProfile.circumstance_tags : matchedProfile.circumstance_tags) ?? [],
-        isMentee ? matchedProfile.mentors_in : ownProfile.mentors_in,
-        isMentee ? matchedProfile.other_tag_text : ownProfile.other_tag_text,
-        (isMentee ? matchedProfile.background_tags : ownProfile.background_tags) ?? [],
-      )
-    : null;
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 p-6">
@@ -97,21 +92,25 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {matchedProfile && (
-        <section className="flex flex-col gap-2 rounded-lg border border-accord bg-accord-tint p-4">
-          <h2 className="text-sm font-medium text-ink">You&apos;ve been matched with</h2>
-          <p className="font-medium text-ink">
-            {isMentee ? matchedProfile.mentors_in : matchedProfile.seeking_guidance_on}
-          </p>
-          <p className="text-sm text-ink/80">{matchedProfile.bio}</p>
-          {reasons && (reasons.sharedWords.length > 0 || reasons.sharedTags.length > 0) && (
-            <p className="text-xs text-ink/70">
-              Matched because you both mentioned{" "}
-              {reasons.sharedWords.slice(0, 4).join(", ") || "similar things"}
-              {reasons.sharedTags.length > 0 &&
-                ` and share ${reasons.sharedTags.map((t) => TAG_LABELS.get(t) ?? t).join(", ")}`}
-            </p>
-          )}
+      {matches.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-sm font-medium text-muted">
+            {matches.length === 1 ? "You've been matched" : `Your ${matches.length} matches`}
+          </h2>
+          <div className="flex flex-col gap-3">
+            {matches.map(({ id, profile }) => (
+              <Link
+                key={id}
+                href={`/match/${id}`}
+                className="flex items-center justify-between rounded-lg border border-accord bg-accord-tint p-4 transition-opacity hover:opacity-90"
+              >
+                <p className="font-medium text-ink">
+                  {isMentee ? profile.mentors_in : profile.seeking_guidance_on}
+                </p>
+                <span className="text-sm font-medium text-ink underline">View match</span>
+              </Link>
+            ))}
+          </div>
         </section>
       )}
 
