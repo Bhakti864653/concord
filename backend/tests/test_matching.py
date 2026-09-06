@@ -1,4 +1,9 @@
-from app.matching import _jaccard, _tokenize, score_pair
+import pytest
+from fastapi import HTTPException
+from pydantic import ValidationError
+
+from app import matching
+from app.matching import PreferencesIn, _jaccard, _save_preferences, _tokenize, score_pair
 
 
 def test_tokenize_lowercases_and_drops_stopwords():
@@ -82,3 +87,71 @@ def test_score_pair_other_tag_text_folds_into_text_overlap():
         "guidance", "robotics", [], "guidance", "robotics", []
     )
     assert score == 0.7
+
+
+def test_preferences_in_rejects_duplicate_ranked_ids():
+    with pytest.raises(ValidationError):
+        PreferencesIn(ranked_ids=["a", "b", "a"])
+
+
+class FakeTable:
+    def __init__(self, rows):
+        self._rows = rows
+        self.upserted = None
+
+    def select(self, *_args, **_kwargs):
+        return self
+
+    def execute(self):
+        return self
+
+    @property
+    def data(self):
+        return self._rows
+
+    def upsert(self, row):
+        self.upserted = row
+        return self
+
+
+class FakeAdminClient:
+    def __init__(self, other_table_rows):
+        self._other_table_rows = other_table_rows
+        self.saved_table = None
+
+    def table(self, name):
+        if name == "mentor_profiles" or name == "mentee_profiles":
+            table = FakeTable(self._other_table_rows)
+        else:
+            table = FakeTable([])
+            self.saved_table = table
+        return table
+
+
+def test_save_preferences_rejects_an_unknown_profile_id(monkeypatch):
+    fake = FakeAdminClient(other_table_rows=[{"user_id": "real-mentor"}])
+    monkeypatch.setattr(matching, "get_admin_client", lambda: fake)
+
+    body = PreferencesIn(ranked_ids=["real-mentor", "made-up-id"])
+    with pytest.raises(HTTPException) as exc_info:
+        _save_preferences(
+            "mentee_preferences", "ranked_mentor_ids", "mentor_profiles", "u1", body
+        )
+    assert exc_info.value.status_code == 400
+    assert "made-up-id" in exc_info.value.detail
+
+
+def test_save_preferences_writes_the_ranked_list_keyed_by_caller(monkeypatch):
+    fake = FakeAdminClient(other_table_rows=[{"user_id": "real-mentor"}])
+    monkeypatch.setattr(matching, "get_admin_client", lambda: fake)
+
+    body = PreferencesIn(ranked_ids=["real-mentor"], locked=True)
+    _save_preferences(
+        "mentee_preferences", "ranked_mentor_ids", "mentor_profiles", "u1", body
+    )
+
+    assert fake.saved_table.upserted == {
+        "user_id": "u1",
+        "ranked_mentor_ids": ["real-mentor"],
+        "locked": True,
+    }
