@@ -49,10 +49,10 @@ export default async function PreferencesPage() {
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 p-6">
       <Link href="/dashboard" className="flex items-center gap-2">
         <Logo />
-        <span className="font-medium text-ink">Concord</span>
+        <span className="font-display font-medium text-ink">Concord</span>
       </Link>
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold text-ink">
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
           Rank your {userType === "mentee" ? "mentors" : "mentees"}
         </h1>
         <p className="text-sm text-muted">

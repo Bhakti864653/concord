@@ -66,7 +66,7 @@ export default async function DashboardPage() {
       <div className="flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Logo />
-          <span className="font-medium text-ink">Concord</span>
+          <span className="font-display font-medium text-ink">Concord</span>
         </Link>
         <div className="flex items-center gap-4 text-sm">
           <Link href="/preferences" className="font-medium text-ink underline">

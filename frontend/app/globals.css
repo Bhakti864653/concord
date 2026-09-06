@@ -37,7 +37,8 @@
   --color-accord: var(--accord);
   --color-accord-tint: var(--accord-tint);
   --color-danger: var(--danger);
-  --font-sans: var(--font-sora);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-bricolage);
 }
 
 @media (prefers-color-scheme: dark) {

@@ -37,7 +37,7 @@ export default async function OnboardingPage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center gap-6 p-6">
       <div className={`flex flex-col gap-1 border-l-4 pl-4 ${roleColor}`}>
-        <h1 className="text-2xl font-semibold text-ink">
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
           Set up your {userType === "mentee" ? "mentee" : "mentor"} profile
         </h1>
         <p className="text-sm text-muted">

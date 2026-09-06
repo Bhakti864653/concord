@@ -37,10 +37,10 @@ export default function LoginPage() {
     <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 p-6">
       <Link href="/" className="flex items-center gap-2 self-start">
         <Logo />
-        <span className="font-medium text-ink">Concord</span>
+        <span className="font-display font-medium text-ink">Concord</span>
       </Link>
       <div className="flex flex-col gap-6 rounded-lg border border-line bg-paper-raised p-6">
-        <h1 className="text-2xl font-semibold text-ink">Log in</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">Log in</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
             type="email"

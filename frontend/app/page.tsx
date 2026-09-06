@@ -16,10 +16,10 @@ export default function Home() {
       <div className="relative flex flex-1 flex-col justify-center gap-8 sm:max-w-md">
         <div className="flex items-center gap-2">
           <Logo />
-          <span className="text-sm font-medium tracking-tight text-muted">Concord</span>
+          <span className="font-display text-sm font-medium tracking-tight text-muted">Concord</span>
         </div>
 
-        <h1 className="text-4xl leading-tight font-semibold text-ink sm:text-5xl">
+        <h1 className="font-display text-6xl leading-[0.95] font-semibold tracking-tight text-ink sm:text-7xl">
           Find the mentor who already walked your path.
         </h1>
 
