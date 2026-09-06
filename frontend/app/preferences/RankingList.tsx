@@ -15,11 +15,16 @@ export default function RankingList({
   initialOrder,
   initialLocked,
   onSave,
+  cardColor,
 }: {
   items: RankingItem[];
   initialOrder: string[];
   initialLocked: boolean;
   onSave: (orderedIds: string[], locked: boolean) => Promise<void>;
+  /** The color of the side being ranked here (mentors on the mentee
+   * ranking page, mentees on the mentor ranking page) - matches the
+   * convention on the dashboard's browse cards. */
+  cardColor: "mentee" | "mentor";
 }) {
   const byId = new Map(items.map((item) => [item.id, item]));
   const [order, setOrder] = useState(initialOrder);
@@ -49,17 +54,19 @@ export default function RankingList({
   }
 
   if (items.length === 0) {
-    return <p className="text-sm text-gray-500">No one to rank yet.</p>;
+    return <p className="text-sm text-muted">No one to rank yet.</p>;
   }
+
+  const cardBorderClass = cardColor === "mentee" ? "border-mentee" : "border-mentor";
 
   return (
     <div className="flex flex-col gap-4">
       {locked && (
-        <div className="flex items-center justify-between rounded border border-green-600 bg-green-50 px-3 py-2 text-sm">
+        <div className="flex items-center justify-between rounded-lg border border-accord bg-accord-tint px-3 py-2 text-sm text-ink">
           <span>Your preferences are locked in.</span>
           <button
             onClick={() => setLocked(false)}
-            className="underline"
+            className="font-medium underline"
             disabled={saving}
           >
             Unlock to edit
@@ -74,16 +81,14 @@ export default function RankingList({
           return (
             <div
               key={id}
-              className="flex items-start justify-between gap-3 rounded border p-3"
+              className={`flex items-start justify-between gap-3 rounded-lg border-l-4 bg-paper-raised p-3 ${cardBorderClass}`}
             >
               <div className="flex flex-col gap-1">
-                <p className="text-xs text-gray-500">#{index + 1}</p>
-                <p className="font-medium">{item.title}</p>
-                <p className="text-sm text-gray-700">{item.subtitle}</p>
-                {item.extra && (
-                  <p className="text-xs text-gray-500">{item.extra}</p>
-                )}
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted">#{index + 1}</p>
+                <p className="font-medium text-ink">{item.title}</p>
+                <p className="text-sm text-muted">{item.subtitle}</p>
+                {item.extra && <p className="text-xs text-muted">{item.extra}</p>}
+                <p className="text-xs font-medium text-accord">
                   Match score: {Math.round(item.score * 100)}%
                 </p>
               </div>
@@ -92,14 +97,14 @@ export default function RankingList({
                   <button
                     onClick={() => move(index, -1)}
                     disabled={index === 0}
-                    className="rounded border px-2 py-1 text-xs disabled:opacity-30"
+                    className="rounded-md border border-line px-2 py-1 text-xs text-ink disabled:opacity-30"
                   >
                     Up
                   </button>
                   <button
                     onClick={() => move(index, 1)}
                     disabled={index === order.length - 1}
-                    className="rounded border px-2 py-1 text-xs disabled:opacity-30"
+                    className="rounded-md border border-line px-2 py-1 text-xs text-ink disabled:opacity-30"
                   >
                     Down
                   </button>
@@ -110,21 +115,21 @@ export default function RankingList({
         })}
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       {!locked && (
         <div className="flex gap-3">
           <button
             onClick={() => handleSave(false)}
             disabled={saving}
-            className="rounded border px-3 py-2 text-sm disabled:opacity-50"
+            className="rounded-md border border-line px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save for later"}
           </button>
           <button
             onClick={() => handleSave(true)}
             disabled={saving}
-            className="rounded bg-black px-3 py-2 text-sm text-white disabled:opacity-50"
+            className="rounded-md bg-ink px-3 py-2 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {saving ? "Saving..." : "Lock in my preferences"}
           </button>

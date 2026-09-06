@@ -55,18 +55,18 @@ export default function MentorProfileForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1.5 text-sm">
+      <label className="flex flex-col gap-1.5 text-sm text-ink">
         What can you mentor in?
         <input
           required
           placeholder="e.g. transitioning into product management"
           value={mentorsIn}
           onChange={(e) => setMentorsIn(e.target.value)}
-          className="rounded border px-3 py-2"
+          className="rounded-md border border-line bg-paper px-3 py-2 focus:border-mentor focus:outline-none"
         />
       </label>
 
-      <label className="flex flex-col gap-1.5 text-sm">
+      <label className="flex flex-col gap-1.5 text-sm text-ink">
         Your background/path
         <textarea
           required
@@ -74,20 +74,22 @@ export default function MentorProfileForm() {
           placeholder="How you got to where you are now"
           value={background}
           onChange={(e) => setBackground(e.target.value)}
-          className="rounded border px-3 py-2"
+          className="rounded-md border border-line bg-paper px-3 py-2 focus:border-mentor focus:outline-none"
         />
       </label>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="text-sm font-medium">
+        <legend className="text-sm font-medium text-ink">
           Anything here part of your own path? (optional)
         </legend>
         <div className="flex flex-wrap gap-2">
           {CIRCUMSTANCE_TAGS.map((tag) => (
             <label
               key={tag.value}
-              className={`cursor-pointer rounded-full border px-3 py-1 text-sm ${
-                tags.includes(tag.value) ? "border-black bg-gray-50 font-medium" : ""
+              className={`cursor-pointer rounded-full border px-3 py-1 text-sm transition-colors ${
+                tags.includes(tag.value)
+                  ? "border-mentor bg-mentor-tint font-medium text-ink"
+                  : "border-line text-muted"
               }`}
             >
               <input
@@ -104,11 +106,11 @@ export default function MentorProfileForm() {
           placeholder="Other (optional)"
           value={otherTagText}
           onChange={(e) => setOtherTagText(e.target.value)}
-          className="rounded border px-3 py-2 text-sm"
+          className="rounded-md border border-line bg-paper px-3 py-2 text-sm focus:border-mentor focus:outline-none"
         />
       </fieldset>
 
-      <label className="flex flex-col gap-1.5 text-sm">
+      <label className="flex flex-col gap-1.5 text-sm text-ink">
         How many mentees are you open to?
         <input
           type="number"
@@ -117,11 +119,11 @@ export default function MentorProfileForm() {
           required
           value={availabilityCount}
           onChange={(e) => setAvailabilityCount(e.target.value)}
-          className="w-24 rounded border px-3 py-2"
+          className="w-24 rounded-md border border-line bg-paper px-3 py-2 focus:border-mentor focus:outline-none"
         />
       </label>
 
-      <label className="flex flex-col gap-1.5 text-sm">
+      <label className="flex flex-col gap-1.5 text-sm text-ink">
         Short bio
         <textarea
           required
@@ -129,15 +131,15 @@ export default function MentorProfileForm() {
           placeholder="A little about you, for mentees deciding whether to reach out"
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          className="rounded border px-3 py-2"
+          className="rounded-md border border-line bg-paper px-3 py-2 focus:border-mentor focus:outline-none"
         />
       </label>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
       <button
         type="submit"
         disabled={loading}
-        className="rounded bg-black px-3 py-2 text-white disabled:opacity-50"
+        className="rounded-md bg-mentor px-3 py-2 font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {loading ? "Saving..." : "Save profile"}
       </button>

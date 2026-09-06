@@ -1,26 +1,80 @@
 @import "tailwindcss";
 
+/*
+  Concord's palette is not decorative - it's a role system. `--mentee` and
+  `--mentor` are the two identity colors of the app's own two-circle mark
+  (mentee circle + mentor circle); wherever they show up in the UI (a browse
+  card's left edge, a form header) they're telling you which side of the
+  marketplace you're looking at. `--accord` (the two circles' overlap, in
+  the mark) is reserved for the one thing this whole app is for: an actual
+  agreed match. It should never appear as ordinary decoration.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #1e2422;
+  --paper: #f7f7f5;
+  --paper-raised: #ffffff;
+  --line: #e2e0da;
+  --muted: #6b6f6a;
+  --mentee: #ad452f;
+  --mentee-tint: #f4e3de;
+  --mentor: #2b6e68;
+  --mentor-tint: #dfe9e6;
+  --accord: #916817;
+  --accord-tint: #f3e6c4;
+  --danger: #b3261e;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-mentee: var(--mentee);
+  --color-mentee-tint: var(--mentee-tint);
+  --color-mentor: var(--mentor);
+  --color-mentor-tint: var(--mentor-tint);
+  --color-accord: var(--accord);
+  --color-accord-tint: var(--accord-tint);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-sora);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --ink: #f2efe9;
+    --paper: #171b19;
+    --paper-raised: #1e2422;
+    --line: #333833;
+    --muted: #9a9d97;
+    --mentee: #e08064;
+    --mentee-tint: #3a2a24;
+    --mentor: #5aa89f;
+    --mentor-tint: #223330;
+    --accord: #dab24c;
+    --accord-tint: #3a3020;
+    --danger: #e0796f;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .concord-mark-fade {
+    animation: concord-mark-fade 0.7s ease-out;
+  }
+}
+
+@keyframes concord-mark-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

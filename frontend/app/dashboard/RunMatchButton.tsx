@@ -34,11 +34,11 @@ export default function RunMatchButton() {
       <button
         onClick={handleRun}
         disabled={status === "running"}
-        className="rounded bg-black px-3 py-1.5 text-sm text-white disabled:opacity-50"
+        className="rounded-md border border-accord bg-accord-tint px-3 py-1.5 text-sm font-medium text-ink transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {status === "running" ? "Running match..." : "Run matching (admin)"}
       </button>
-      {message && <p className="text-xs text-gray-600">{message}</p>}
+      {message && <p className="text-xs text-muted">{message}</p>}
     </div>
   );
 }

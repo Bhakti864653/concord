@@ -14,7 +14,7 @@ export default function LogoutButton() {
   }
 
   return (
-    <button onClick={handleLogout} className="text-sm underline">
+    <button onClick={handleLogout} className="font-medium text-muted underline hover:text-ink">
       Log out
     </button>
   );

@@ -1,6 +1,7 @@
-// Two overlapping circles: mentee + mentor, matched. Kept as plain
-// currentColor line-art so it follows the page's own text color in both
-// light and dark mode without any extra theming work.
+// Two overlapping circles: the mentee circle and the mentor circle, filled
+// with the app's own role colors so the mark itself explains the palette -
+// the overlap where they meet is the accord color, the same one used
+// anywhere in the app for an actual agreed match.
 export default function Logo({ className }: { className?: string }) {
   return (
     <svg
@@ -12,8 +13,8 @@ export default function Logo({ className }: { className?: string }) {
       aria-hidden="true"
       className={className}
     >
-      <circle cx="10" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="18" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="10" cy="12" r="9" fill="var(--mentee-tint)" stroke="var(--mentee)" strokeWidth="1.6" />
+      <circle cx="18" cy="12" r="9" fill="var(--mentor-tint)" stroke="var(--mentor)" strokeWidth="1.6" fillOpacity="0.75" />
     </svg>
   );
 }

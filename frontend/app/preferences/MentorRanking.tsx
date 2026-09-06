@@ -64,8 +64,8 @@ export default function MentorRanking({
     }
   }
 
-  if (error) return <p className="text-sm text-red-600">{error}</p>;
-  if (!items) return <p className="text-sm text-gray-500">Loading...</p>;
+  if (error) return <p className="text-sm text-danger">{error}</p>;
+  if (!items) return <p className="text-sm text-muted">Loading...</p>;
 
   return (
     <RankingList
@@ -73,6 +73,7 @@ export default function MentorRanking({
       initialOrder={order}
       initialLocked={savedLocked}
       onSave={handleSave}
+      cardColor="mentee"
     />
   );
 }

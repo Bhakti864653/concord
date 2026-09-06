@@ -32,13 +32,15 @@ export default async function OnboardingPage() {
     redirect("/dashboard");
   }
 
+  const roleColor = userType === "mentee" ? "border-mentee" : "border-mentor";
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-6 p-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">
+    <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center gap-6 p-6">
+      <div className={`flex flex-col gap-1 border-l-4 pl-4 ${roleColor}`}>
+        <h1 className="text-2xl font-semibold text-ink">
           Set up your {userType === "mentee" ? "mentee" : "mentor"} profile
         </h1>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted">
           This is what the other side sees when you&apos;re matched.
         </p>
       </div>
