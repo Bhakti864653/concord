@@ -16,9 +16,15 @@ logger = logging.getLogger("concord")
 
 app = FastAPI(title="Concord API")
 
+frontend_origins = [
+    origin.strip()
+    for origin in os.getenv("FRONTEND_ORIGINS", "http://localhost:3000").split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=frontend_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -47,4 +53,5 @@ def health():
         "status": "ok",
         "supabase_url_configured": bool(os.getenv("SUPABASE_URL")),
         "supabase_key_configured": bool(os.getenv("SUPABASE_PUBLISHABLE_KEY")),
+        "frontend_origins_debug": [repr(o) for o in frontend_origins],
     }
