@@ -1,10 +1,11 @@
 import re
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, field_validator
 
-from .auth import get_user_id, require_admin
+from .auth import require_admin
 from .gale_shapley import run_gale_shapley
+from .rate_limit import rate_limit
 from .supabase_client import get_admin_client
 
 router = APIRouter()
@@ -58,8 +59,9 @@ def score_pair(
 
 
 @router.get("/matching/suggested-mentors")
-def suggested_mentors(authorization: str | None = Header(default=None)):
-    user_id = get_user_id(authorization)
+def suggested_mentors(
+    user_id: str = Depends(rate_limit("suggested-mentors", max_calls=60, window_seconds=3600)),
+):
     admin = get_admin_client()
 
     mentee_result = (
@@ -94,8 +96,9 @@ def suggested_mentors(authorization: str | None = Header(default=None)):
 
 
 @router.get("/matching/suggested-mentees")
-def suggested_mentees(authorization: str | None = Header(default=None)):
-    user_id = get_user_id(authorization)
+def suggested_mentees(
+    user_id: str = Depends(rate_limit("suggested-mentees", max_calls=60, window_seconds=3600)),
+):
     admin = get_admin_client()
 
     mentor_result = (
@@ -167,9 +170,9 @@ def _save_preferences(
 
 @router.post("/preferences/mentee")
 def save_mentee_preferences(
-    body: PreferencesIn, authorization: str | None = Header(default=None)
+    body: PreferencesIn,
+    user_id: str = Depends(rate_limit("preferences-mentee", max_calls=30, window_seconds=3600)),
 ):
-    user_id = get_user_id(authorization)
     # A mentor id missing from a mentee's ranked list is valid Gale-Shapley
     # semantics (unranked = unacceptable to that mentee), not an error.
     _save_preferences(
@@ -180,9 +183,9 @@ def save_mentee_preferences(
 
 @router.post("/preferences/mentor")
 def save_mentor_preferences(
-    body: PreferencesIn, authorization: str | None = Header(default=None)
+    body: PreferencesIn,
+    user_id: str = Depends(rate_limit("preferences-mentor", max_calls=30, window_seconds=3600)),
 ):
-    user_id = get_user_id(authorization)
     _save_preferences(
         "mentor_preferences", "ranked_mentee_ids", "mentee_profiles", user_id, body
     )

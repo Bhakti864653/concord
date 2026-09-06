@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-from .auth import get_user_id
+from .rate_limit import rate_limit
 from .supabase_client import get_admin_client
 
 router = APIRouter()
@@ -36,9 +36,9 @@ class MentorProfileIn(BaseModel):
 
 @router.post("/profiles/mentee")
 def upsert_mentee_profile(
-    body: MenteeProfileIn, authorization: str | None = Header(default=None)
+    body: MenteeProfileIn,
+    user_id: str = Depends(rate_limit("profile-mentee", max_calls=20, window_seconds=3600)),
 ):
-    user_id = get_user_id(authorization)
     admin = get_admin_client()
 
     tags = [t for t in body.circumstance_tags if t in CIRCUMSTANCE_TAGS]
@@ -55,9 +55,9 @@ def upsert_mentee_profile(
 
 @router.post("/profiles/mentor")
 def upsert_mentor_profile(
-    body: MentorProfileIn, authorization: str | None = Header(default=None)
+    body: MentorProfileIn,
+    user_id: str = Depends(rate_limit("profile-mentor", max_calls=20, window_seconds=3600)),
 ):
-    user_id = get_user_id(authorization)
     admin = get_admin_client()
 
     tags = [t for t in body.background_tags if t in CIRCUMSTANCE_TAGS]
