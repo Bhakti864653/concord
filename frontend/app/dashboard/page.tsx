@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Logo from "@/components/Logo";
+import NotificationBell from "@/components/NotificationBell";
 import LogoutButton from "./LogoutButton";
 import RunMatchButton from "./RunMatchButton";
 
@@ -79,6 +80,7 @@ export default async function DashboardPage() {
           <span className="font-display font-medium text-ink">Concord</span>
         </Link>
         <div className="flex items-center gap-4 text-sm">
+          <NotificationBell userId={user.id} />
           <Link href="/preferences" className="font-medium text-ink underline">
             Rank your {isMentee ? "mentors" : "mentees"}
           </Link>

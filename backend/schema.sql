@@ -240,3 +240,79 @@ create policy "Match participants can add notes"
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
+
+-- Notifications are never inserted by app code - two triggers below create
+-- them whenever a match or message row is inserted, so a notification
+-- fires regardless of what actually did the insert (the backend's admin
+-- client for matches, a direct client insert with the anon key for
+-- messages). No insert policy for regular users; only select/update.
+create table notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  kind text not null,
+  payload jsonb not null default '{}',
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index notifications_user_id_read_at_idx on notifications (user_id, read_at);
+
+alter table notifications enable row level security;
+
+create policy "Users can view their own notifications"
+  on notifications for select
+  to authenticated
+  using (auth.uid() = user_id);
+
+create policy "Users can mark their own notifications read"
+  on notifications for update
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create or replace function notify_new_match() returns trigger as $$
+begin
+  insert into notifications (user_id, kind, payload)
+  values (
+    new.mentee_user_id, 'match_created',
+    jsonb_build_object('match_mentee_id', new.mentee_user_id, 'mentor_user_id', new.mentor_user_id)
+  );
+  insert into notifications (user_id, kind, payload)
+  values (
+    new.mentor_user_id, 'match_created',
+    jsonb_build_object('match_mentee_id', new.mentee_user_id, 'mentor_user_id', new.mentor_user_id)
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_match_created
+  after insert on matches
+  for each row execute function notify_new_match();
+
+create or replace function notify_new_message() returns trigger as $$
+declare
+  recipient uuid;
+begin
+  select case when m.mentee_user_id = new.sender_id then m.mentor_user_id else m.mentee_user_id end
+  into recipient
+  from matches m
+  where m.mentee_user_id = new.match_mentee_id;
+
+  if recipient is not null then
+    insert into notifications (user_id, kind, payload)
+    values (
+      recipient, 'new_message',
+      jsonb_build_object('match_mentee_id', new.match_mentee_id, 'message_id', new.id)
+    );
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_message_created
+  after insert on messages
+  for each row execute function notify_new_message();
+
+-- Lets the notification bell subscribe to new rows the same way chat does.
+alter publication supabase_realtime add table notifications;
