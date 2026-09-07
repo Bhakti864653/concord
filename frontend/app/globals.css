@@ -79,6 +79,24 @@ body {
   color: var(--ink);
 }
 
+/* A warm-tinted lift for surfaces that need to visually separate from the
+   atmospheric background (profile/match/browse cards, notes) - used
+   deliberately, not on every box, so it still reads as "this is raised"
+   rather than the flat SaaS-card-kit look of one shadow on everything. */
+.concord-lift {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 10px 28px -12px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .concord-lift {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 10px 28px -12px rgba(0, 0, 0, 0.5);
+  }
+}
+
 /* The atmospheric glow behind the landing hero and the match reveal banner -
    the two role colors bleeding into each other, standing in for "two people
    converging." Meant to sit behind content, at low opacity, never under text

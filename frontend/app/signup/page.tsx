@@ -53,7 +53,7 @@ export default function SignupPage() {
         <Logo />
         <span className="font-display font-medium text-ink">Concord</span>
       </Link>
-      <div className="relative flex flex-col gap-6 rounded-2xl border border-line bg-paper-raised p-6">
+      <div className="concord-lift relative flex flex-col gap-6 rounded-2xl border border-line bg-paper-raised p-6">
         <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">Create your account</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <fieldset className="flex flex-col gap-2">

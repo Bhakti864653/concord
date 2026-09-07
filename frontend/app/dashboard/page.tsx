@@ -107,7 +107,7 @@ export default async function DashboardPage() {
             {matches.map(({ id, profile }) => (
               <div
                 key={id}
-                className="flex items-center justify-between rounded-lg border border-accord bg-accord-tint p-4"
+                className="concord-lift flex items-center justify-between rounded-xl border border-accord bg-accord-tint p-4"
               >
                 <p className="font-medium text-ink">
                   {isMentee ? profile.mentors_in : profile.seeking_guidance_on}
@@ -127,7 +127,7 @@ export default async function DashboardPage() {
       )}
 
       <section
-        className={`flex flex-col gap-2 rounded-lg border-l-4 bg-paper-raised p-4 ${
+        className={`concord-lift flex flex-col gap-2 rounded-xl border-l-4 bg-paper-raised p-4 ${
           isMentee ? "border-mentee" : "border-mentor"
         }`}
       >
@@ -160,7 +160,7 @@ export default async function DashboardPage() {
             {others.map((p) => (
               <div
                 key={p.user_id}
-                className={`rounded-lg border-l-4 bg-paper-raised p-4 ${
+                className={`concord-lift rounded-xl border-l-4 bg-paper-raised p-4 ${
                   isMentee ? "border-mentor" : "border-mentee"
                 }`}
               >

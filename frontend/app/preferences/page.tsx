@@ -46,7 +46,11 @@ export default async function PreferencesPage() {
   const savedLocked: boolean = saved?.locked ?? false;
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 p-6">
+    <main className="relative mx-auto flex w-full max-w-2xl flex-col gap-8 overflow-hidden p-6">
+      <div
+        aria-hidden="true"
+        className="concord-glow pointer-events-none absolute -right-1/3 -top-1/4 -z-10 h-[70%] w-[70%] opacity-40"
+      />
       <Link href="/dashboard" className="flex items-center gap-2">
         <Logo />
         <span className="font-display font-medium text-ink">Concord</span>

@@ -70,13 +70,19 @@ export default async function MatchPage({
       </div>
 
       <div className="match-reveal-in relative flex flex-col gap-2">
-        <p className="text-sm font-medium text-accord">You&apos;ve been matched!</p>
+        <div className="flex items-center gap-2">
+          <svg width="20" height="16" viewBox="0 0 28 24" aria-hidden="true">
+            <circle cx="10" cy="12" r="9" fill="var(--accord-glow)" fillOpacity="0.55" />
+            <circle cx="18" cy="12" r="9" fill="var(--accord-glow)" fillOpacity="0.85" />
+          </svg>
+          <p className="text-sm font-semibold text-accord">You&apos;ve been matched!</p>
+        </div>
         <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
           {isMentee ? counterpart.mentors_in : counterpart.seeking_guidance_on}
         </h1>
       </div>
 
-      <section className="match-reveal-in relative flex flex-col gap-3 rounded-2xl border border-accord bg-accord-tint p-6">
+      <section className="concord-lift match-reveal-in relative flex flex-col gap-3 rounded-2xl border border-accord bg-accord-tint p-6">
         <p className="text-sm text-ink">{counterpart.bio}</p>
 
         {!isMentee && (
@@ -95,7 +101,7 @@ export default async function MatchPage({
         )}
       </section>
 
-      <section className="relative flex flex-col gap-2 rounded-2xl border-l-4 border-mentee bg-paper-raised p-4">
+      <section className="concord-lift relative flex flex-col gap-2 rounded-2xl border-l-4 border-mentee bg-paper-raised p-4">
         <h2 className="text-sm font-medium text-muted">Icebreaker</h2>
         <p className="text-sm text-ink">{icebreaker}</p>
       </section>

@@ -90,7 +90,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
         )}
       </button>
       {open && (
-        <div className="absolute right-0 z-10 mt-2 w-64 rounded-lg border border-line bg-paper-raised p-2">
+        <div className="concord-lift absolute right-0 z-10 mt-2 w-64 rounded-xl border border-line bg-paper-raised p-2">
           {notifications.length === 0 && (
             <p className="p-2 text-sm text-muted">No notifications yet.</p>
           )}
@@ -99,8 +99,14 @@ export default function NotificationBell({ userId }: { userId: string }) {
               key={n.id}
               href={n.payload.match_mentee_id ? `/match/${n.payload.match_mentee_id}` : "/dashboard"}
               onClick={() => setOpen(false)}
-              className="block rounded-md p-2 text-sm text-ink hover:bg-paper"
+              className="flex items-center gap-2.5 rounded-md p-2 text-sm text-ink hover:bg-paper"
             >
+              <span
+                aria-hidden="true"
+                className={`h-2 w-2 shrink-0 rounded-full ${
+                  n.kind === "match_created" ? "bg-accord" : "bg-mentor"
+                }`}
+              />
               {describe(n.kind)}
             </Link>
           ))}

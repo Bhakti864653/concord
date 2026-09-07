@@ -74,14 +74,14 @@ export default function NotesList({
       <div className="flex flex-col gap-3">
         {notes.length === 0 && <p className="text-sm text-muted">No notes yet.</p>}
         {notes.map((n) => (
-          <div key={n.id} className="rounded-lg border border-line bg-paper-raised p-3">
+          <div key={n.id} className="concord-lift rounded-xl border border-line bg-paper-raised p-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-ink">
+              <p className="text-xs font-semibold tracking-tight text-ink">
                 {n.author_id === currentUserId ? "You" : partnerLabel}
               </p>
               <p className="text-xs text-muted">{new Date(n.created_at).toLocaleString()}</p>
             </div>
-            <p className="mt-1 text-sm text-ink">{n.body}</p>
+            <p className="mt-1.5 text-sm text-ink">{n.body}</p>
           </div>
         ))}
       </div>
