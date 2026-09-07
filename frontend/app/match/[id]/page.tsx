@@ -54,22 +54,29 @@ export default async function MatchPage({
         : "Ask them what got them started on this path.";
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 p-6">
-      <Link href="/dashboard" className="flex items-center gap-2">
+    <main className="relative mx-auto flex w-full max-w-2xl flex-col gap-8 overflow-hidden p-6">
+      <div
+        aria-hidden="true"
+        className="concord-glow pointer-events-none absolute -right-1/3 -top-1/4 -z-10 h-[140%] w-[140%]"
+      />
+
+      <Link href="/dashboard" className="relative flex items-center gap-2">
         <Logo />
         <span className="font-display font-medium text-ink">Concord</span>
       </Link>
 
-      <MatchTabs id={id} active="overview" />
+      <div className="relative">
+        <MatchTabs id={id} active="overview" />
+      </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="match-reveal-in relative flex flex-col gap-2">
         <p className="text-sm font-medium text-accord">You&apos;ve been matched!</p>
         <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
           {isMentee ? counterpart.mentors_in : counterpart.seeking_guidance_on}
         </h1>
       </div>
 
-      <section className="flex flex-col gap-3 rounded-lg border border-accord bg-accord-tint p-5">
+      <section className="match-reveal-in relative flex flex-col gap-3 rounded-2xl border border-accord bg-accord-tint p-6">
         <p className="text-sm text-ink">{counterpart.bio}</p>
 
         {!isMentee && (
@@ -88,14 +95,14 @@ export default async function MatchPage({
         )}
       </section>
 
-      <section className="flex flex-col gap-2 rounded-lg border-l-4 border-mentee bg-paper-raised p-4">
+      <section className="relative flex flex-col gap-2 rounded-2xl border-l-4 border-mentee bg-paper-raised p-4">
         <h2 className="text-sm font-medium text-muted">Icebreaker</h2>
         <p className="text-sm text-ink">{icebreaker}</p>
       </section>
 
       <Link
         href={`/match/${id}/chat`}
-        className="self-start rounded-md bg-ink px-5 py-2.5 font-medium text-paper transition-opacity hover:opacity-90"
+        className="relative self-start rounded-md bg-ink px-5 py-2.5 font-medium text-paper transition-opacity hover:opacity-90"
       >
         Start chatting
       </Link>

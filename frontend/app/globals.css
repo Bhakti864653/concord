@@ -8,20 +8,30 @@
   marketplace you're looking at. `--accord` (the two circles' overlap, in
   the mark) is reserved for the one thing this whole app is for: an actual
   agreed match. It should never appear as ordinary decoration.
+
+  "Warm Convergence" direction (chosen from three comparison mockups,
+  2026-09-07): a warmer, more atmospheric evolution of the same role-color
+  system. The `-glow` variants are the same hues at full saturation, meant
+  only for soft blurred backgrounds/gradients (never text) - the plain
+  `--mentee`/`--mentor`/`--accord` tokens are separately darkened to clear
+  4.5:1 contrast against `--paper` for anywhere they carry text or a border.
 */
 :root {
-  --ink: #1e2422;
-  --paper: #f7f7f5;
-  --paper-raised: #ffffff;
-  --line: #e2e0da;
-  --muted: #6b6f6a;
-  --mentee: #ad452f;
-  --mentee-tint: #f4e3de;
-  --mentor: #2b6e68;
-  --mentor-tint: #dfe9e6;
-  --accord: #916817;
-  --accord-tint: #f3e6c4;
-  --danger: #b3261e;
+  --ink: #2b2320;
+  --paper: #fbf3ea;
+  --paper-raised: #fffaf3;
+  --line: #e8dcc9;
+  --muted: #776b5d;
+  --mentee: #ab4a29;
+  --mentee-tint: #f3ded2;
+  --mentee-glow: #c6603f;
+  --mentor: #2e7268;
+  --mentor-tint: #dcebe7;
+  --mentor-glow: #3a8a7d;
+  --accord: #8f6212;
+  --accord-tint: #f1e4c2;
+  --accord-glow: #c9932e;
+  --danger: #a8362b;
 }
 
 @theme inline {
@@ -32,10 +42,13 @@
   --color-muted: var(--muted);
   --color-mentee: var(--mentee);
   --color-mentee-tint: var(--mentee-tint);
+  --color-mentee-glow: var(--mentee-glow);
   --color-mentor: var(--mentor);
   --color-mentor-tint: var(--mentor-tint);
+  --color-mentor-glow: var(--mentor-glow);
   --color-accord: var(--accord);
   --color-accord-tint: var(--accord-tint);
+  --color-accord-glow: var(--accord-glow);
   --color-danger: var(--danger);
   --font-sans: var(--font-inter);
   --font-display: var(--font-bricolage);
@@ -43,24 +56,46 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --ink: #f2efe9;
-    --paper: #171b19;
-    --paper-raised: #1e2422;
-    --line: #333833;
-    --muted: #9a9d97;
-    --mentee: #e08064;
-    --mentee-tint: #3a2a24;
-    --mentor: #5aa89f;
-    --mentor-tint: #223330;
-    --accord: #dab24c;
-    --accord-tint: #3a3020;
-    --danger: #e0796f;
+    --ink: #f5ede2;
+    --paper: #201a14;
+    --paper-raised: #2a2119;
+    --line: #3d3226;
+    --muted: #b3a48f;
+    --mentee: #e0805c;
+    --mentee-tint: #3d2a20;
+    --mentee-glow: #e0805c;
+    --mentor: #5cab9e;
+    --mentor-tint: #1f332e;
+    --mentor-glow: #5cab9e;
+    --accord: #d9ac52;
+    --accord-tint: #3a2e15;
+    --accord-glow: #d9ac52;
+    --danger: #e08a7a;
   }
 }
 
 body {
   background: var(--paper);
   color: var(--ink);
+}
+
+/* The atmospheric glow behind the landing hero and the match reveal banner -
+   the two role colors bleeding into each other, standing in for "two people
+   converging." Meant to sit behind content, at low opacity, never under text
+   without a solid layer between (see --mentee/--mentor for the text-safe,
+   darker versions of the same hues). */
+.concord-glow {
+  background:
+    radial-gradient(circle at 30% 40%, var(--mentee-glow) 0%, transparent 55%),
+    radial-gradient(circle at 66% 45%, var(--mentor-glow) 0%, transparent 55%);
+  filter: blur(60px);
+  opacity: 0.35;
+}
+
+@media (prefers-color-scheme: dark) {
+  .concord-glow {
+    opacity: 0.22;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -77,5 +112,25 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* The one-time "You've been matched!" moment on the reveal screen - a
+   single orchestrated pop-in, not scattered animation, since this is the
+   one moment in the app worth making feel like an actual reveal. */
+@media (prefers-reduced-motion: no-preference) {
+  .match-reveal-in {
+    animation: match-reveal-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes match-reveal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }

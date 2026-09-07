@@ -4,14 +4,10 @@ import Logo from "@/components/Logo";
 export default function Home() {
   return (
     <main className="relative flex min-h-screen flex-1 flex-col overflow-hidden px-6 py-10 sm:px-12 sm:py-16">
-      <svg
+      <div
         aria-hidden="true"
-        viewBox="0 0 640 640"
-        className="concord-mark-fade pointer-events-none absolute -right-20 top-1/2 hidden h-[560px] w-[560px] -translate-y-1/2 lg:block"
-      >
-        <circle cx="260" cy="320" r="190" fill="var(--mentee-tint)" stroke="var(--mentee)" strokeWidth="2" />
-        <circle cx="420" cy="320" r="190" fill="var(--mentor-tint)" stroke="var(--mentor)" strokeWidth="2" fillOpacity="0.8" />
-      </svg>
+        className="concord-mark-fade concord-glow pointer-events-none absolute -right-1/4 top-0 -z-10 h-full w-full sm:-right-10"
+      />
 
       <div className="relative flex flex-1 flex-col justify-center gap-8 sm:max-w-md">
         <div className="flex items-center gap-2">

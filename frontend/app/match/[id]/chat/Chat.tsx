@@ -95,25 +95,38 @@ export default function Chat({
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="flex h-[55vh] flex-col gap-2 overflow-y-auto rounded-lg border border-line bg-paper-raised p-4">
-        {messages.length === 0 && (
-          <p className="text-sm text-muted">No messages yet - say hello.</p>
-        )}
-        {messages.map((m) => {
-          const mine = m.sender_id === currentUserId;
-          return (
-            <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${
-                  mine ? "bg-ink text-paper" : "border border-line bg-paper text-ink"
-                }`}
-              >
-                {m.body}
+      <div className="relative flex h-[55vh] flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-paper-raised p-4">
+        <div
+          aria-hidden="true"
+          className="concord-glow pointer-events-none absolute -right-1/3 -top-1/3 -z-10 h-[140%] w-[140%] opacity-60"
+        />
+        <div className="relative flex flex-1 flex-col gap-3 overflow-y-auto">
+          {messages.length === 0 && (
+            <p className="text-sm text-muted">No messages yet - say hello.</p>
+          )}
+          {messages.map((m) => {
+            const mine = m.sender_id === currentUserId;
+            return (
+              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
+                    mine
+                      ? "bg-ink text-paper"
+                      : "border border-line bg-paper-raised text-ink"
+                  }`}
+                  style={
+                    mine
+                      ? { boxShadow: "0 4px 16px color-mix(in srgb, var(--accord-glow) 25%, transparent)" }
+                      : undefined
+                  }
+                >
+                  {m.body}
+                </div>
               </div>
-            </div>
-          );
-        })}
-        <div ref={bottomRef} />
+            );
+          })}
+          <div ref={bottomRef} />
+        </div>
       </div>
 
       {error && <p className="text-sm text-danger">{error}</p>}

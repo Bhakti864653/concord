@@ -44,12 +44,16 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 p-6">
-      <Link href="/" className="flex items-center gap-2 self-start">
+    <main className="relative mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 overflow-hidden p-6">
+      <div
+        aria-hidden="true"
+        className="concord-glow pointer-events-none absolute -top-1/3 left-1/2 -z-10 h-[120%] w-[160%] -translate-x-1/2"
+      />
+      <Link href="/" className="relative flex items-center gap-2 self-start">
         <Logo />
         <span className="font-display font-medium text-ink">Concord</span>
       </Link>
-      <div className="flex flex-col gap-6 rounded-lg border border-line bg-paper-raised p-6">
+      <div className="relative flex flex-col gap-6 rounded-2xl border border-line bg-paper-raised p-6">
         <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">Create your account</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <fieldset className="flex flex-col gap-2">
