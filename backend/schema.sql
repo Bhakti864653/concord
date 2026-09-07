@@ -203,3 +203,40 @@ create policy "Matched partners can view each other's availability"
          or (m.mentor_user_id = auth.uid() and m.mentee_user_id = availability.user_id)
     )
   );
+
+-- Shared session notes for a matched pair - same participants-only
+-- pattern as messages, written directly from the frontend.
+create table match_notes (
+  id uuid primary key default gen_random_uuid(),
+  match_mentee_id uuid not null references matches(mentee_user_id) on delete cascade,
+  author_id uuid not null references auth.users(id) on delete cascade,
+  body text not null check (char_length(body) between 1 and 2000),
+  created_at timestamptz not null default now()
+);
+
+create index match_notes_match_mentee_id_created_at_idx on match_notes (match_mentee_id, created_at);
+
+alter table match_notes enable row level security;
+
+create policy "Match participants can read notes"
+  on match_notes for select
+  to authenticated
+  using (
+    exists (
+      select 1 from matches m
+      where m.mentee_user_id = match_notes.match_mentee_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+create policy "Match participants can add notes"
+  on match_notes for insert
+  to authenticated
+  with check (
+    author_id = auth.uid()
+    and exists (
+      select 1 from matches m
+      where m.mentee_user_id = match_notes.match_mentee_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
