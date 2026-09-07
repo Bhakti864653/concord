@@ -69,6 +69,32 @@ export default async function MatchPage({
         <MatchTabs id={id} active="overview" />
       </div>
 
+      {/* A compact trail of the same journey path from the dashboard, so
+          arriving here reads as reaching a milestone, not a card that
+          appeared out of nowhere. */}
+      <div className="match-reveal-in relative flex items-center gap-1" aria-hidden="true">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-mentor text-paper">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+            <path d="M5 12l4 4L19 6" />
+          </svg>
+        </span>
+        <span className="h-0.5 w-8 bg-accord-glow" />
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-mentor text-paper">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+            <path d="M5 12l4 4L19 6" />
+          </svg>
+        </span>
+        <span className="h-0.5 w-8 bg-accord-glow" />
+        <svg width="34" height="26" viewBox="0 0 28 24">
+          <circle cx="10" cy="12" r="9" fill="var(--mentee-glow)" fillOpacity="0.7" />
+          <circle cx="18" cy="12" r="9" fill="var(--mentor-glow)" fillOpacity="0.9" />
+        </svg>
+        <span className="h-0.5 w-8 bg-line" />
+        <span className="h-7 w-7 rounded-full border-2 border-line" />
+        <span className="h-0.5 w-8 bg-line" />
+        <span className="h-7 w-7 rounded-full border-2 border-line" />
+      </div>
+
       <div className="match-reveal-in relative flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <svg width="20" height="16" viewBox="0 0 28 24" aria-hidden="true">

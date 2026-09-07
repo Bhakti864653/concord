@@ -3,8 +3,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Logo from "@/components/Logo";
 import NotificationBell from "@/components/NotificationBell";
+import { buildJourney } from "@/lib/journey";
 import LogoutButton from "./LogoutButton";
 import RunMatchButton from "./RunMatchButton";
+import JourneyPath from "./JourneyPath";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -24,7 +26,6 @@ export default async function DashboardPage() {
 
   const isMentee = userType === "mentee";
   const ownTable = isMentee ? "mentee_profiles" : "mentor_profiles";
-  const browseTable = isMentee ? "mentor_profiles" : "mentee_profiles";
 
   const { data: ownProfile } = await supabase
     .from(ownTable)
@@ -36,12 +37,19 @@ export default async function DashboardPage() {
     redirect("/onboarding");
   }
 
-  const { data: others } = await supabase.from(browseTable).select("*");
+  const preferencesTable = isMentee ? "mentee_preferences" : "mentor_preferences";
+  const { data: preferences } = await supabase
+    .from(preferencesTable)
+    .select("locked")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const preferencesLocked = preferences?.locked ?? false;
 
   // A mentee is matched at most once (mentee_user_id is the matches table's
   // primary key), but a mentor with availability_count > 1 can genuinely
   // have several - so this reads every match row for the current user
-  // rather than assuming (and erroring on) exactly one.
+  // rather than assuming (and erroring on) exactly one. The journey path
+  // below tracks the first one; any others are listed separately.
   const matchColumn = isMentee ? "mentee_user_id" : "mentor_user_id";
   const counterpartTable = isMentee ? "mentor_profiles" : "mentee_profiles";
   const { data: matchRows } = await supabase
@@ -66,11 +74,55 @@ export default async function DashboardPage() {
       // match even for a mentor with several, since each mentee is only
       // ever matched once.
       id: m.mentee_user_id,
+      counterpartId: isMentee ? m.mentor_user_id : m.mentee_user_id,
       profile: profileByUserId.get(isMentee ? m.mentor_user_id : m.mentee_user_id),
     }))
-    .filter((m): m is { id: string; profile: NonNullable<typeof m.profile> } => !!m.profile);
+    .filter(
+      (m): m is { id: string; counterpartId: string; profile: NonNullable<typeof m.profile> } =>
+        !!m.profile,
+    );
+
+  const primaryMatch = matches[0] ?? null;
+  const otherMatches = matches.slice(1);
+
+  let hasMessage = false;
+  let hasOverlap = false;
+
+  if (primaryMatch) {
+    const { data: messageRows } = await supabase
+      .from("messages")
+      .select("id")
+      .eq("match_mentee_id", primaryMatch.id)
+      .limit(1);
+    hasMessage = (messageRows ?? []).length > 0;
+
+    const [{ data: ownAvailability }, { data: partnerAvailability }] = await Promise.all([
+      supabase.from("availability").select("slots").eq("user_id", user.id).maybeSingle(),
+      supabase
+        .from("availability")
+        .select("slots")
+        .eq("user_id", primaryMatch.counterpartId)
+        .maybeSingle(),
+    ]);
+    const ownSlots = new Set(ownAvailability?.slots ?? []);
+    hasOverlap = (partnerAvailability?.slots ?? []).some((slot: string) => ownSlots.has(slot));
+  }
 
   const isAdmin = user.email?.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
+
+  const journey = buildJourney({
+    ownProfileSummary: isMentee ? ownProfile.seeking_guidance_on : ownProfile.mentors_in,
+    preferencesLocked,
+    matched: !!primaryMatch,
+    matchId: primaryMatch?.id ?? null,
+    counterpartSummary: primaryMatch
+      ? isMentee
+        ? primaryMatch.profile.mentors_in
+        : primaryMatch.profile.seeking_guidance_on
+      : null,
+    hasMessage,
+    hasOverlap,
+  });
 
   return (
     <main className="relative mx-auto flex w-full max-w-2xl flex-col gap-8 overflow-hidden p-6">
@@ -85,9 +137,6 @@ export default async function DashboardPage() {
         </Link>
         <div className="flex items-center gap-4 text-sm">
           <NotificationBell userId={user.id} />
-          <Link href="/preferences" className="font-medium text-ink underline">
-            Rank your {isMentee ? "mentors" : "mentees"}
-          </Link>
           <LogoutButton />
         </div>
       </div>
@@ -98,13 +147,17 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {matches.length > 0 && (
+      <div className="concord-lift rounded-2xl border border-line bg-paper-raised px-5 py-2">
+        <JourneyPath steps={journey} />
+      </div>
+
+      {otherMatches.length > 0 && (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-medium text-muted">
-            {matches.length === 1 ? "You've been matched" : `Your ${matches.length} matches`}
+            {otherMatches.length === 1 ? "Also matched with" : `${otherMatches.length} more matches`}
           </h2>
           <div className="flex flex-col gap-3">
-            {matches.map(({ id, profile }) => (
+            {otherMatches.map(({ id, profile }) => (
               <div
                 key={id}
                 className="concord-lift flex items-center justify-between rounded-xl border border-accord bg-accord-tint p-4"
@@ -125,54 +178,6 @@ export default async function DashboardPage() {
           </div>
         </section>
       )}
-
-      <section
-        className={`concord-lift flex flex-col gap-2 rounded-xl border-l-4 bg-paper-raised p-4 ${
-          isMentee ? "border-mentee" : "border-mentor"
-        }`}
-      >
-        <h2 className="text-sm font-medium text-muted">Your profile</h2>
-        {isMentee ? (
-          <>
-            <p className="font-medium text-ink">{ownProfile.seeking_guidance_on}</p>
-            <p className="text-sm text-muted">{ownProfile.bio}</p>
-          </>
-        ) : (
-          <>
-            <p className="font-medium text-ink">{ownProfile.mentors_in}</p>
-            <p className="text-sm text-muted">{ownProfile.bio}</p>
-            <p className="text-xs text-muted">
-              Open to {ownProfile.availability_count} mentee
-              {ownProfile.availability_count === 1 ? "" : "s"}
-            </p>
-          </>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-muted">
-          {isMentee ? "Mentors" : "Mentees"} on Concord
-        </h2>
-        {!others || others.length === 0 ? (
-          <p className="text-sm text-muted">No one else has joined yet.</p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {others.map((p) => (
-              <div
-                key={p.user_id}
-                className={`concord-lift rounded-xl border-l-4 bg-paper-raised p-4 ${
-                  isMentee ? "border-mentor" : "border-mentee"
-                }`}
-              >
-                <p className="font-medium text-ink">
-                  {isMentee ? p.mentors_in : p.seeking_guidance_on}
-                </p>
-                <p className="text-sm text-muted">{p.bio}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
     </main>
   );
 }
