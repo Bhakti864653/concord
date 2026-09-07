@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Logo from "@/components/Logo";
 import { matchReasons } from "@/lib/matchReasons";
+import { requireMatch } from "@/lib/matchAuth";
 import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
+import MatchTabs from "./MatchTabs";
 
 const TAG_LABELS = new Map(CIRCUMSTANCE_TAGS.map((t) => [t.value, t.label]));
 
@@ -14,32 +16,11 @@ export default async function MatchPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  const { user, match } = await requireMatch(supabase, id);
 
   const userType = user.user_metadata?.user_type as "mentee" | "mentor" | undefined;
   if (userType !== "mentee" && userType !== "mentor") {
     redirect("/login");
-  }
-
-  // `id` is the match's mentee_user_id. RLS on `matches` already restricts
-  // this to rows where the caller is the mentee or mentor on it, so a
-  // non-participant guessing another match's id simply gets no row back -
-  // there's no separate ownership check to get right here.
-  const { data: match } = await supabase
-    .from("matches")
-    .select("mentee_user_id, mentor_user_id")
-    .eq("mentee_user_id", id)
-    .maybeSingle();
-
-  if (!match) {
-    redirect("/dashboard");
   }
 
   const isMentee = userType === "mentee";
@@ -78,6 +59,8 @@ export default async function MatchPage({
         <Logo />
         <span className="font-display font-medium text-ink">Concord</span>
       </Link>
+
+      <MatchTabs id={id} active="overview" />
 
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium text-accord">You&apos;ve been matched!</p>

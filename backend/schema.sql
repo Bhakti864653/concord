@@ -174,3 +174,32 @@ create policy "Match participants can send messages"
 -- Lets Supabase Realtime broadcast new rows to subscribed clients (the chat
 -- UI listens on this instead of polling).
 alter publication supabase_realtime add table messages;
+
+-- Simple day+time-of-day availability tags (e.g. "mon-evening"), not a
+-- real calendar - written directly from the frontend, same reasoning as
+-- messages. Everyone can manage their own row; a matched partner gets
+-- read-only access to it too, so both sides of a match can see overlap.
+create table availability (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  slots text[] not null default '{}',
+  updated_at timestamptz not null default now()
+);
+
+alter table availability enable row level security;
+
+create policy "Users manage their own availability"
+  on availability for all
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "Matched partners can view each other's availability"
+  on availability for select
+  to authenticated
+  using (
+    exists (
+      select 1 from matches m
+      where (m.mentee_user_id = auth.uid() and m.mentor_user_id = availability.user_id)
+         or (m.mentor_user_id = auth.uid() and m.mentee_user_id = availability.user_id)
+    )
+  );
