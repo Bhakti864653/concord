@@ -470,3 +470,93 @@ create policy "Match participants can delete milestones"
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
+
+-- An actual scheduled date+time for a session, distinct from the loose
+-- day/time-of-day `availability` tags - gives post-session check-ins
+-- something concrete to compute "has this passed" against. Either
+-- participant can log one; same participants-only shape as match_goals,
+-- no update policy since a session is just a timestamp (delete-and-redo
+-- covers "I got the time wrong").
+create table match_sessions (
+  id uuid primary key default gen_random_uuid(),
+  match_mentee_id uuid not null references matches(mentee_user_id) on delete cascade,
+  scheduled_for timestamptz not null,
+  created_by uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+create index match_sessions_match_mentee_id_idx on match_sessions (match_mentee_id, scheduled_for);
+
+alter table match_sessions enable row level security;
+
+create policy "Match participants can read sessions"
+  on match_sessions for select
+  to authenticated
+  using (
+    exists (
+      select 1 from matches m
+      where m.mentee_user_id = match_sessions.match_mentee_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+create policy "Match participants can add sessions"
+  on match_sessions for insert
+  to authenticated
+  with check (
+    created_by = auth.uid()
+    and exists (
+      select 1 from matches m
+      where m.mentee_user_id = match_sessions.match_mentee_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+create policy "Match participants can delete sessions"
+  on match_sessions for delete
+  to authenticated
+  using (
+    exists (
+      select 1 from matches m
+      where m.mentee_user_id = match_sessions.match_mentee_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+-- Private post-session check-ins - deliberately NOT participants-scoped
+-- like every other match_* table above: a check-in is only ever visible to
+-- the person who wrote it, never their match partner, so RLS is scoped to
+-- auth.uid() = user_id alone. One check-in per user per session.
+create table session_checkins (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references match_sessions(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  did_happen boolean not null,
+  helpfulness int check (helpfulness between 1 and 5),
+  continue_wanted boolean not null,
+  focus_next text check (focus_next is null or char_length(focus_next) <= 1000),
+  created_at timestamptz not null default now(),
+  unique (session_id, user_id)
+);
+
+create index session_checkins_user_id_idx on session_checkins (user_id);
+
+alter table session_checkins enable row level security;
+
+create policy "Users can read their own check-ins"
+  on session_checkins for select
+  to authenticated
+  using (auth.uid() = user_id);
+
+create policy "Users can add their own check-ins"
+  on session_checkins for insert
+  to authenticated
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1 from match_sessions s
+      join matches m on m.mentee_user_id = s.match_mentee_id
+      where s.id = session_checkins.session_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
