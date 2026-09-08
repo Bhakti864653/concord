@@ -61,6 +61,18 @@ def test_mentee_with_no_preferences_stays_unmatched():
     assert result == {}
 
 
+def test_zero_capacity_mentor_rejects_outright_instead_of_crashing():
+    # A mentor with 0 remaining capacity (already full elsewhere) should
+    # simply reject every proposal, not crash trying to bump a "worst
+    # held" mentee that was never held in the first place.
+    result = run_gale_shapley(
+        mentee_prefs={"m1": ["t1"]},
+        mentor_prefs={"t1": ["m1"]},
+        mentor_capacity={"t1": 0},
+    )
+    assert result == {}
+
+
 def test_result_is_stable_no_blocking_pair():
     # m1 and m2 want opposite mentors as their top choice, so both get their
     # top choice with no contention - the simplest possible stability check.

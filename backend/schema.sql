@@ -621,3 +621,30 @@ create policy "Users can read their own reports"
   on reports for select
   to authenticated
   using (auth.uid() = reported_by);
+
+-- Matching rounds: preferences_open -> preferences_locked ->
+-- matching_in_progress -> results_available -> (a fresh row, back to
+-- preferences_open). Only ever appended, never edited after the fact -
+-- the most-recently-created row is "the current round". Status isn't
+-- sensitive, so any authenticated user can read it directly (the
+-- dashboard shows it without a backend round trip); only the backend's
+-- admin client (POST /matching/rounds/advance) can write to it.
+create table matching_rounds (
+  id uuid primary key default gen_random_uuid(),
+  status text not null default 'preferences_open' check (
+    status in ('preferences_open', 'preferences_locked', 'matching_in_progress', 'results_available')
+  ),
+  created_at timestamptz not null default now(),
+  locked_at timestamptz,
+  matching_started_at timestamptz,
+  completed_at timestamptz
+);
+
+alter table matching_rounds enable row level security;
+
+create policy "Matching round status is viewable by any authenticated user"
+  on matching_rounds for select
+  to authenticated
+  using (true);
+
+insert into matching_rounds default values;

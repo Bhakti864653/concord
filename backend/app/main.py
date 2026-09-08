@@ -12,6 +12,7 @@ from .matching import router as matching_router
 from .profiles import router as profiles_router
 from .rematch import router as rematch_router
 from .reports import router as reports_router
+from .rounds import router as rounds_router
 
 load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
@@ -51,6 +52,7 @@ app.include_router(matching_router)
 app.include_router(rematch_router)
 app.include_router(match_explanation_router)
 app.include_router(reports_router)
+app.include_router(rounds_router)
 
 
 @app.get("/health")

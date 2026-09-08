@@ -5,7 +5,7 @@ import Logo from "@/components/Logo";
 import NotificationBell from "@/components/NotificationBell";
 import { buildJourney } from "@/lib/journey";
 import LogoutButton from "./LogoutButton";
-import RunMatchButton from "./RunMatchButton";
+import RoundControl from "./RoundControl";
 import JourneyPath from "./JourneyPath";
 import MatchExplanation from "../match/[id]/MatchExplanation";
 
@@ -112,6 +112,15 @@ export default async function DashboardPage() {
 
   const isAdmin = user.email?.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
 
+  const { data: currentRound } = await supabase
+    .from("matching_rounds")
+    .select("status")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const roundStatus = currentRound?.status ?? "preferences_open";
+  const isWaitlisted = preferencesLocked && !primaryMatch;
+
   const journey = buildJourney({
     ownProfileSummary: isMentee ? ownProfile.seeking_guidance_on : ownProfile.mentors_in,
     preferencesLocked,
@@ -143,15 +152,20 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {isAdmin && (
-        <div className="flex justify-end">
-          <RunMatchButton />
-        </div>
-      )}
+      <div className="flex justify-end">
+        <RoundControl status={roundStatus} isAdmin={!!isAdmin} />
+      </div>
 
       <div className="concord-lift rounded-2xl border border-line bg-paper-raised px-5 py-2">
         <JourneyPath steps={journey} />
       </div>
+
+      {isWaitlisted && (
+        <p className="text-sm text-muted">
+          You&apos;re waitlisted for the next matching round - your locked preferences will be
+          used automatically once it runs.
+        </p>
+      )}
 
       {primaryMatch && <MatchExplanation matchId={primaryMatch.id} isMentee={isMentee} />}
 

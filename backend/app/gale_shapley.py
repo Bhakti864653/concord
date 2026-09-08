@@ -41,7 +41,7 @@ def run_gale_shapley(
         capacity = mentor_capacity.get(mentor_id, 1)
         if len(held) < capacity:
             held.append(mentee_id)
-        else:
+        elif held:
             worst = max(held, key=lambda m: ranks_this_mentee[m])
             if ranks_this_mentee[mentee_id] < ranks_this_mentee[worst]:
                 held.remove(worst)
@@ -49,6 +49,10 @@ def run_gale_shapley(
                 unmatched.append(worst)
             else:
                 unmatched.append(mentee_id)
+        else:
+            # Capacity is 0 (or negative) - nothing held to bump, so this
+            # mentee is simply rejected outright and tries their next choice.
+            unmatched.append(mentee_id)
 
     return {
         mentee_id: mentor_id
