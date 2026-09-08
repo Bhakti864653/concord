@@ -3,10 +3,11 @@ import { ImageResponse } from "next/og";
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 
-// Same two-overlapping-circles mark as components/Logo.tsx, but on a solid
-// dark chip - a browser tab can sit on a light or dark bar regardless of the
-// page's own theme, so the icon needs its own fixed-contrast background
-// rather than relying on currentColor like the in-page logo does.
+// Same two-overlapping-circles mark as components/Logo.tsx, in the current
+// mentee/mentor brand colors, on a solid dark chip - a browser tab can sit
+// on a light or dark bar regardless of the page's own theme, so the icon
+// needs its own fixed-contrast background rather than relying on
+// currentColor like the in-page logo does.
 export default function Icon() {
   return new ImageResponse(
     (
@@ -30,7 +31,7 @@ export default function Icon() {
               width: 14,
               height: 14,
               borderRadius: "50%",
-              border: "1.6px solid white",
+              border: "1.6px solid #8a7bc7",
             }}
           />
           <div
@@ -41,7 +42,7 @@ export default function Icon() {
               width: 14,
               height: 14,
               borderRadius: "50%",
-              border: "1.6px solid white",
+              border: "1.6px solid #f2a58f",
             }}
           />
         </div>
