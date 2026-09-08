@@ -8,6 +8,7 @@ import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
 import MatchExplanation from "./MatchExplanation";
 import MatchTabs from "./MatchTabs";
 import RematchButton from "./RematchButton";
+import ReportButton from "./ReportButton";
 
 const TAG_LABELS = new Map(CIRCUMSTANCE_TAGS.map((t) => [t.value, t.label]));
 
@@ -150,8 +151,9 @@ export default async function MatchPage({
           >
             Start chatting
           </Link>
-          <div className="relative">
+          <div className="relative flex flex-col gap-2">
             <RematchButton matchId={id} />
+            <ReportButton matchId={id} />
           </div>
         </>
       )}

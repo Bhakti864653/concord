@@ -41,6 +41,10 @@ export default function Home() {
         </div>
 
         <HowItWorks />
+
+        <Link href="/community-guidelines" className="text-xs text-muted underline hover:text-ink">
+          Community guidelines
+        </Link>
       </div>
     </main>
   );

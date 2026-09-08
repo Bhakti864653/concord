@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Logo from "@/components/Logo";
 import { requireMatch } from "@/lib/matchAuth";
 import MatchTabs from "../MatchTabs";
+import ReportButton from "../ReportButton";
 import Chat from "./Chat";
 
 export default async function ChatPage({
@@ -22,6 +23,7 @@ export default async function ChatPage({
       </Link>
       <MatchTabs id={id} active="chat" />
       <Chat matchId={id} currentUserId={user.id} />
+      <ReportButton matchId={id} />
     </main>
   );
 }

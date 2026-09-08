@@ -597,3 +597,27 @@ create policy "Users can read their own rematch requests"
   on rematch_requests for select
   to authenticated
   using (auth.uid() = requested_by);
+
+-- Trust & safety: reports/blocks/emergency-ends, optionally pointing at a
+-- specific message. Writes go through the backend's admin client (like
+-- rematch_requests above) - it also needs to verify a reported message
+-- really belongs to the claimed match before logging it. No admin review
+-- UI yet (feature 8 adds one) - this table is just the durable record.
+create table reports (
+  id uuid primary key default gen_random_uuid(),
+  match_mentee_id uuid not null references matches(mentee_user_id) on delete cascade,
+  reported_by uuid not null references auth.users(id) on delete cascade,
+  message_id uuid references messages(id) on delete set null,
+  kind text not null check (kind in ('report', 'block', 'emergency_end')),
+  reason text not null check (char_length(reason) between 1 and 1000),
+  created_at timestamptz not null default now()
+);
+
+create index reports_reported_by_idx on reports (reported_by);
+
+alter table reports enable row level security;
+
+create policy "Users can read their own reports"
+  on reports for select
+  to authenticated
+  using (auth.uid() = reported_by);
