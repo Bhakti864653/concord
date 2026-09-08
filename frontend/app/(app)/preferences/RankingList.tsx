@@ -35,6 +35,7 @@ export default function RankingList({
   const [locked, setLocked] = useState(initialLocked);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState(initialOrder[0]);
 
   function move(index: number, direction: -1 | 1) {
     const target = index + direction;
@@ -58,19 +59,43 @@ export default function RankingList({
   }
 
   if (items.length === 0) {
-    return <p className="text-sm text-muted">No one to rank yet.</p>;
+    return (
+      <p className="rounded-2xl border border-dashed border-line p-6 text-center text-sm text-muted">
+        No one to rank yet.
+      </p>
+    );
   }
 
-  const cardBorderClass = cardColor === "mentee" ? "border-mentee" : "border-mentor";
+  // Tailwind's compiler only picks up class names that appear literally in
+  // source, so the mentee/mentor accent has to be full class strings per
+  // branch here rather than a template-interpolated `bg-${color}` (which
+  // would silently generate no CSS at all).
+  const accent =
+    cardColor === "mentee"
+      ? {
+          selectedRow: "border-mentee bg-mentee-tint",
+          badgeSelected: "bg-mentee text-paper-raised",
+          bar: "bg-mentee",
+          calloutBg: "bg-mentee-tint",
+          calloutText: "text-mentee",
+        }
+      : {
+          selectedRow: "border-mentor bg-mentor-tint",
+          badgeSelected: "bg-mentor text-paper-raised",
+          bar: "bg-mentor",
+          calloutBg: "bg-mentor-tint",
+          calloutText: "text-mentor",
+        };
+  const selected = byId.get(selectedId) ?? byId.get(order[0]);
 
   return (
     <div className="flex flex-col gap-4">
       {locked && (
-        <div className="flex items-center justify-between rounded-lg border border-accord bg-accord-tint px-3 py-2 text-sm text-ink">
+        <div className="flex items-center justify-between rounded-xl border border-accord bg-accord-tint px-4 py-2.5 text-sm text-ink">
           <span>Your preferences are locked in.</span>
           <button
             onClick={() => setLocked(false)}
-            className="font-medium underline"
+            className="font-bold text-accord underline"
             disabled={saving}
           >
             Unlock to edit
@@ -78,57 +103,100 @@ export default function RankingList({
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        {order.map((id, index) => {
-          const item = byId.get(id);
-          if (!item) return null;
-          return (
-            <div
-              key={id}
-              className={`flex items-start justify-between gap-3 rounded-lg border-l-4 bg-paper-raised p-3 ${cardBorderClass}`}
-            >
-              <div className="flex flex-col gap-1">
-                <p className="text-xs text-muted">#{index + 1}</p>
-                <p className="font-medium text-ink">{item.title}</p>
-                <p className="text-sm text-muted">{item.subtitle}</p>
-                {item.extra && <p className="text-xs text-muted">{item.extra}</p>}
-                <p className="text-xs font-medium text-accord">
-                  Match score: {Math.round(item.score * 100)}%
-                </p>
-                {item.matchReasons &&
-                  (item.matchReasons.sharedWords.length > 0 ||
-                    item.matchReasons.sharedTags.length > 0) && (
-                    <p className="text-xs text-muted">
-                      Matched because you both mentioned{" "}
-                      {item.matchReasons.sharedWords.slice(0, 4).join(", ") || "similar things"}
-                      {item.matchReasons.sharedTags.length > 0 &&
-                        ` and share ${item.matchReasons.sharedTags
-                          .map((t) => TAG_LABELS.get(t) ?? t)
-                          .join(", ")}`}
-                    </p>
-                  )}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[360px_1fr] lg:items-start">
+        <div className="concord-lift flex flex-col gap-2 rounded-2xl border border-line bg-paper-raised p-4">
+          <p className="px-1 text-xs font-bold text-muted">SUGGESTED ORDER</p>
+          {order.map((id, index) => {
+            const item = byId.get(id);
+            if (!item) return null;
+            const isSelected = id === selected?.id;
+            return (
+              <div
+                key={id}
+                className={`flex items-center gap-3 rounded-xl border p-2.5 transition-colors ${
+                  isSelected ? accent.selectedRow : "border-transparent hover:bg-paper"
+                }`}
+              >
+                <button
+                  onClick={() => setSelectedId(id)}
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                >
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${
+                      isSelected ? accent.badgeSelected : "bg-paper text-muted"
+                    }`}
+                  >
+                    {index + 1}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-ink">
+                      {item.title}
+                    </span>
+                    <span className="block text-xs text-muted">
+                      Match score: {Math.round(item.score * 100)}%
+                    </span>
+                  </span>
+                </button>
+                {!locked && (
+                  <div className="flex shrink-0 flex-col gap-0.5">
+                    <button
+                      onClick={() => move(index, -1)}
+                      disabled={index === 0}
+                      className="rounded-md border border-line px-1.5 py-0.5 text-[10px] font-bold text-ink disabled:opacity-30"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      onClick={() => move(index, 1)}
+                      disabled={index === order.length - 1}
+                      className="rounded-md border border-line px-1.5 py-0.5 text-[10px] font-bold text-ink disabled:opacity-30"
+                    >
+                      ▼
+                    </button>
+                  </div>
+                )}
               </div>
-              {!locked && (
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => move(index, -1)}
-                    disabled={index === 0}
-                    className="rounded-md border border-line px-2 py-1 text-xs text-ink disabled:opacity-30"
-                  >
-                    Up
-                  </button>
-                  <button
-                    onClick={() => move(index, 1)}
-                    disabled={index === order.length - 1}
-                    className="rounded-md border border-line px-2 py-1 text-xs text-ink disabled:opacity-30"
-                  >
-                    Down
-                  </button>
-                </div>
+            );
+          })}
+        </div>
+
+        {selected && (
+          <div className="concord-lift flex flex-col gap-4 rounded-2xl border border-line bg-paper-raised p-6">
+            <div className={`h-2 w-16 rounded-full ${accent.bar}`} />
+            <div>
+              <h2 className="font-display text-xl font-semibold tracking-tight text-ink">
+                {selected.title}
+              </h2>
+              {selected.extra && (
+                <p className="mt-1 text-sm text-muted">{selected.extra}</p>
               )}
             </div>
-          );
-        })}
+
+            {selected.matchReasons &&
+              (selected.matchReasons.sharedWords.length > 0 ||
+                selected.matchReasons.sharedTags.length > 0) && (
+                <div className={`rounded-xl p-4 ${accent.calloutBg}`}>
+                  <strong className={`block text-sm ${accent.calloutText}`}>
+                    Why this could be a fit
+                  </strong>
+                  <p className="mt-1 text-sm text-ink">
+                    You both mentioned{" "}
+                    {selected.matchReasons.sharedWords.slice(0, 4).join(", ") || "similar things"}
+                    {selected.matchReasons.sharedTags.length > 0 &&
+                      ` and share ${selected.matchReasons.sharedTags
+                        .map((t) => TAG_LABELS.get(t) ?? t)
+                        .join(", ")}`}
+                    .
+                  </p>
+                </div>
+              )}
+
+            <div>
+              <p className="text-xs font-bold text-muted">ABOUT</p>
+              <p className="mt-1 text-sm text-ink">{selected.subtitle}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {error && <p className="text-sm text-danger">{error}</p>}
@@ -138,14 +206,14 @@ export default function RankingList({
           <button
             onClick={() => handleSave(false)}
             disabled={saving}
-            className="rounded-md border border-line px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
+            className="rounded-xl border border-line px-4 py-2.5 text-sm font-bold text-ink disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save for later"}
           </button>
           <button
             onClick={() => handleSave(true)}
             disabled={saving}
-            className="rounded-md bg-ink px-3 py-2 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="rounded-xl bg-mentee px-4 py-2.5 text-sm font-bold text-paper-raised transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {saving ? "Saving..." : "Lock in my preferences"}
           </button>
