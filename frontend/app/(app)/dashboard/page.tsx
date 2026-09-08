@@ -158,7 +158,7 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.3fr_.8fr]">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[1.3fr_.8fr]">
         <div className="concord-lift relative overflow-hidden rounded-[22px] bg-gradient-to-br from-mentee-glow via-mentee to-mentee p-7 text-paper-raised">
           <div
             aria-hidden="true"
