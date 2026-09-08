@@ -9,15 +9,16 @@ export default function Home() {
         className="concord-mark-fade concord-glow pointer-events-none absolute -right-1/4 top-0 -z-10 h-full w-full sm:-right-10"
       />
 
-      {/* Fills the empty right half on wide screens with the same
-          two-circle motif as the logo, instead of leaving it blank. */}
+      {/* A small nod to the empty right half on wide screens with the same
+          two-circle motif as the logo, instead of leaving it totally blank -
+          kept subtle, not a dominant shape. */}
       <svg
         aria-hidden="true"
         viewBox="0 0 28 24"
-        className="pointer-events-none absolute -right-40 top-1/2 -z-10 hidden h-[560px] w-[650px] -translate-y-1/2 opacity-[0.16] lg:block"
+        className="pointer-events-none absolute right-24 top-1/2 -z-10 hidden h-[220px] w-[260px] -translate-y-1/2 opacity-[0.14] lg:block"
       >
-        <circle cx="10" cy="12" r="9" fill="none" stroke="var(--mentee)" strokeWidth="0.5" />
-        <circle cx="18" cy="12" r="9" fill="none" stroke="var(--mentor)" strokeWidth="0.5" />
+        <circle cx="10" cy="12" r="9" fill="none" stroke="var(--mentee)" strokeWidth="0.7" />
+        <circle cx="18" cy="12" r="9" fill="none" stroke="var(--mentor)" strokeWidth="0.7" />
       </svg>
 
       <div className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center gap-8 sm:max-w-none">
