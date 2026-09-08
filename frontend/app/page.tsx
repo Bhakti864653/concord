@@ -42,9 +42,14 @@ export default function Home() {
 
         <HowItWorks />
 
-        <Link href="/community-guidelines" className="text-xs text-muted underline hover:text-ink">
-          Community guidelines
-        </Link>
+        <div className="flex gap-4">
+          <Link href="/how-it-works" className="text-xs text-muted underline hover:text-ink">
+            How the matching algorithm works
+          </Link>
+          <Link href="/community-guidelines" className="text-xs text-muted underline hover:text-ink">
+            Community guidelines
+          </Link>
+        </div>
       </div>
     </main>
   );
