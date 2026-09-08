@@ -20,6 +20,17 @@ const ADVANCE_LABELS: Record<RoundStatus, string> = {
   results_available: "Start next round",
 };
 
+const ADVANCE_DESCRIPTIONS: Record<RoundStatus, string> = {
+  preferences_open:
+    "Freezes everyone's current rankings so matching runs on a stable list - no more edits until the next round.",
+  preferences_locked:
+    "Runs the matching algorithm against locked rankings and mentor capacity. Doesn't touch existing active matches.",
+  matching_in_progress:
+    "Publishes results - newly matched pairs can see each other and start chatting. Still-unmatched mentees stay waitlisted.",
+  results_available:
+    "Reopens preferences app-wide so mentees and mentors can update their rankings for the next round.",
+};
+
 export default function RoundControl({ status, isAdmin }: { status: RoundStatus; isAdmin: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -61,6 +72,9 @@ export default function RoundControl({ status, isAdmin }: { status: RoundStatus;
           </button>
         )}
       </div>
+      {isAdmin && !message && (
+        <p className="max-w-[220px] text-right text-xs text-muted">{ADVANCE_DESCRIPTIONS[status]}</p>
+      )}
       {message && <p className="text-xs text-muted">{message}</p>}
     </div>
   );
