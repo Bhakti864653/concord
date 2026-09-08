@@ -152,7 +152,12 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        {isAdmin && (
+          <Link href="/admin" className="text-xs text-muted underline hover:text-ink">
+            Admin dashboard
+          </Link>
+        )}
         <RoundControl status={roundStatus} isAdmin={!!isAdmin} />
       </div>
 
