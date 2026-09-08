@@ -202,7 +202,7 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
         <Link
-          href="/dashboard"
+          href="/rounds"
           className="concord-lift rounded-[18px] border border-line bg-paper-raised p-4"
         >
           <p className="font-semibold text-ink">Matching round</p>

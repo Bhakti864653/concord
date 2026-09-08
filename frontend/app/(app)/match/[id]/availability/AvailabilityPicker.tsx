@@ -41,14 +41,14 @@ export default function AvailabilityPicker({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="concord-lift flex flex-col gap-4 rounded-2xl border border-line bg-paper-raised p-5">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr>
               <th className="p-2"></th>
               {AVAILABILITY_TIMES_OF_DAY.map((t) => (
-                <th key={t.value} className="p-2 text-left text-xs font-medium text-muted">
+                <th key={t.value} className="p-2 text-left text-xs font-bold text-muted">
                   {t.label}
                 </th>
               ))}
@@ -57,7 +57,7 @@ export default function AvailabilityPicker({
           <tbody>
             {AVAILABILITY_DAYS.map((day) => (
               <tr key={day.value}>
-                <td className="p-1 pr-2 text-sm font-medium text-ink">{day.label}</td>
+                <td className="p-1 pr-3 text-sm font-semibold text-ink">{day.label}</td>
                 {AVAILABILITY_TIMES_OF_DAY.map((time) => {
                   const slot = `${day.value}-${time.value}`;
                   const mine = slots.includes(slot);
@@ -67,12 +67,12 @@ export default function AvailabilityPicker({
                       <button
                         type="button"
                         onClick={() => toggle(slot)}
-                        className={`w-full rounded-md border px-2 py-1.5 text-xs transition-colors ${
+                        className={`w-full rounded-xl border px-2 py-2 text-xs font-medium transition-colors ${
                           overlap
-                            ? "border-accord bg-accord-tint font-medium text-ink"
+                            ? "border-accord bg-accord-tint text-accord"
                             : mine
-                              ? "border-ink bg-ink text-paper"
-                              : "border-line text-muted hover:border-ink"
+                              ? "border-mentee bg-mentee text-paper-raised"
+                              : "border-line text-muted hover:border-mentee hover:text-mentee"
                         }`}
                       >
                         {overlap ? "Both free" : mine ? "You're free" : "Mark free"}
@@ -88,21 +88,21 @@ export default function AvailabilityPicker({
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 border-t border-line pt-4">
         <button
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="self-start rounded-md bg-ink px-4 py-2 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="self-start rounded-xl bg-mentee px-5 py-2.5 text-sm font-bold text-paper-raised transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save availability"}
         </button>
-        {saved && <p className="text-xs text-muted">Saved.</p>}
+        {saved && <p className="text-xs font-medium text-accord">Saved.</p>}
       </div>
 
       <p className="text-xs text-muted">
-        Cells marked <span className="font-medium text-ink">Both free</span> are times you&apos;ve
-        both marked as available.
+        Cells marked <span className="font-semibold text-accord">Both free</span> are times
+        you&apos;ve both marked as available.
       </p>
     </div>
   );

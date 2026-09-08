@@ -52,31 +52,41 @@ export default function NotesList({
 
   return (
     <div className="flex flex-col gap-4">
-      <form onSubmit={handleAdd} className="flex flex-col gap-2">
+      <form
+        onSubmit={handleAdd}
+        className="concord-lift flex flex-col gap-3 rounded-2xl border border-line bg-paper-raised p-5"
+      >
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={3}
           maxLength={2000}
           placeholder="What did you discuss? What's next?"
-          className="rounded-md border border-line bg-paper px-3 py-2 text-ink focus:border-ink focus:outline-none"
+          className="rounded-xl border border-line bg-paper px-3 py-2.5 text-sm text-ink focus:border-mentee focus:outline-none"
         />
         {error && <p className="text-sm text-danger">{error}</p>}
         <button
           type="submit"
           disabled={saving || !body.trim()}
-          className="self-start rounded-md bg-ink px-4 py-2 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="self-start rounded-xl bg-mentee px-5 py-2.5 text-sm font-bold text-paper-raised transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {saving ? "Adding..." : "Add note"}
         </button>
       </form>
 
       <div className="flex flex-col gap-3">
-        {notes.length === 0 && <p className="text-sm text-muted">No notes yet.</p>}
+        {notes.length === 0 && (
+          <p className="rounded-2xl border border-dashed border-line p-5 text-center text-sm text-muted">
+            No notes yet - the first one will show up here.
+          </p>
+        )}
         {notes.map((n) => (
-          <div key={n.id} className="concord-lift rounded-xl border border-line bg-paper-raised p-4">
+          <div
+            key={n.id}
+            className="concord-lift rounded-2xl border-l-4 border-mentee bg-paper-raised p-4"
+          >
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold tracking-tight text-ink">
+              <p className="text-xs font-bold tracking-tight text-mentee">
                 {n.author_id === currentUserId ? "You" : partnerLabel}
               </p>
               <p className="text-xs text-muted">{new Date(n.created_at).toLocaleString()}</p>

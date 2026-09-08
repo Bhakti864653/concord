@@ -5,7 +5,7 @@ import LogoutButton from "@/app/(app)/dashboard/LogoutButton";
 const MENTORSHIP_LINKS = (primaryMatchId: string | null) => [
   { href: "/dashboard", label: "Home", icon: "⌘" },
   { href: "/preferences", label: "Discover", icon: "◎" },
-  { href: "/dashboard", label: "Rounds & waitlist", icon: "◷" },
+  { href: "/rounds", label: "Rounds & waitlist", icon: "◷" },
   ...(primaryMatchId
     ? [
         { href: `/match/${primaryMatchId}`, label: "Your match", icon: "✦" },

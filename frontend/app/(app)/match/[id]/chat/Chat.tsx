@@ -115,14 +115,9 @@ export default function Chat({
                 <div
                   className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
                     mine
-                      ? "bg-ink text-paper"
-                      : "border border-line bg-paper-raised text-ink"
+                      ? "rounded-br-md bg-mentee text-paper-raised"
+                      : "rounded-bl-md border border-line bg-paper-raised text-ink"
                   }`}
-                  style={
-                    mine
-                      ? { boxShadow: "0 4px 16px color-mix(in srgb, var(--accord-glow) 25%, transparent)" }
-                      : undefined
-                  }
                 >
                   {m.body}
                 </div>
@@ -142,12 +137,12 @@ export default function Chat({
           onChange={(e) => setBody(e.target.value)}
           placeholder="Type a message"
           maxLength={2000}
-          className="flex-1 rounded-md border border-line bg-paper px-3 py-2 text-ink focus:border-ink focus:outline-none"
+          className="flex-1 rounded-xl border border-line bg-paper-raised px-3.5 py-2.5 text-ink focus:border-mentee focus:outline-none"
         />
         <button
           type="submit"
           disabled={sending || !body.trim()}
-          className="rounded-md bg-ink px-4 py-2 font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="rounded-xl bg-mentee px-5 py-2.5 font-bold text-paper-raised transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           Send
         </button>
