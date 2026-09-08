@@ -5,6 +5,7 @@ import Logo from "@/components/Logo";
 import { matchReasons } from "@/lib/matchReasons";
 import { requireMatch } from "@/lib/matchAuth";
 import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
+import MatchExplanation from "./MatchExplanation";
 import MatchTabs from "./MatchTabs";
 import RematchButton from "./RematchButton";
 
@@ -132,6 +133,10 @@ export default async function MatchPage({
         <h2 className="text-sm font-medium text-muted">Icebreaker</h2>
         <p className="text-sm text-ink">{icebreaker}</p>
       </section>
+
+      <div className="relative">
+        <MatchExplanation matchId={id} isMentee={isMentee} />
+      </div>
 
       {match.status === "ended" ? (
         <p className="relative text-sm text-muted">

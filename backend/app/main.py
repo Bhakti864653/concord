@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from .match_explanation import router as match_explanation_router
 from .matching import router as matching_router
 from .profiles import router as profiles_router
 from .rematch import router as rematch_router
@@ -47,6 +48,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 app.include_router(profiles_router)
 app.include_router(matching_router)
 app.include_router(rematch_router)
+app.include_router(match_explanation_router)
 
 
 @app.get("/health")

@@ -7,6 +7,7 @@ import { buildJourney } from "@/lib/journey";
 import LogoutButton from "./LogoutButton";
 import RunMatchButton from "./RunMatchButton";
 import JourneyPath from "./JourneyPath";
+import MatchExplanation from "../match/[id]/MatchExplanation";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -151,6 +152,8 @@ export default async function DashboardPage() {
       <div className="concord-lift rounded-2xl border border-line bg-paper-raised px-5 py-2">
         <JourneyPath steps={journey} />
       </div>
+
+      {primaryMatch && <MatchExplanation matchId={primaryMatch.id} isMentee={isMentee} />}
 
       {otherMatches.length > 0 && (
         <section className="flex flex-col gap-3">
