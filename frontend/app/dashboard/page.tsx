@@ -55,7 +55,8 @@ export default async function DashboardPage() {
   const { data: matchRows } = await supabase
     .from("matches")
     .select("mentee_user_id, mentor_user_id")
-    .eq(matchColumn, user.id);
+    .eq(matchColumn, user.id)
+    .eq("status", "active");
 
   const counterpartIds = (matchRows ?? []).map((m) =>
     isMentee ? m.mentor_user_id : m.mentee_user_id,

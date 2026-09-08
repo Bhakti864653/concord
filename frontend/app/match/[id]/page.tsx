@@ -6,6 +6,7 @@ import { matchReasons } from "@/lib/matchReasons";
 import { requireMatch } from "@/lib/matchAuth";
 import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
 import MatchTabs from "./MatchTabs";
+import RematchButton from "./RematchButton";
 
 const TAG_LABELS = new Map(CIRCUMSTANCE_TAGS.map((t) => [t.value, t.label]));
 
@@ -132,12 +133,23 @@ export default async function MatchPage({
         <p className="text-sm text-ink">{icebreaker}</p>
       </section>
 
-      <Link
-        href={`/match/${id}/chat`}
-        className="relative self-start rounded-md bg-ink px-5 py-2.5 font-medium text-paper transition-opacity hover:opacity-90"
-      >
-        Start chatting
-      </Link>
+      {match.status === "ended" ? (
+        <p className="relative text-sm text-muted">
+          This match has ended. You&apos;ll be included in the next matching round.
+        </p>
+      ) : (
+        <>
+          <Link
+            href={`/match/${id}/chat`}
+            className="relative self-start rounded-md bg-ink px-5 py-2.5 font-medium text-paper transition-opacity hover:opacity-90"
+          >
+            Start chatting
+          </Link>
+          <div className="relative">
+            <RematchButton matchId={id} />
+          </div>
+        </>
+      )}
     </main>
   );
 }

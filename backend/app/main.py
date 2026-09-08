@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from .matching import router as matching_router
 from .profiles import router as profiles_router
+from .rematch import router as rematch_router
 
 load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
@@ -45,6 +46,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 app.include_router(profiles_router)
 app.include_router(matching_router)
+app.include_router(rematch_router)
 
 
 @app.get("/health")

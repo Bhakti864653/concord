@@ -130,6 +130,13 @@ create policy concord_matches_select
   to authenticated
   using (auth.uid() = mentee_user_id or auth.uid() = mentor_user_id);
 
+-- 'ended' (via ethical rematching, below) stops a match counting as
+-- "currently matched" on the dashboard, but the row and its chat/notes/
+-- goals/sessions stay around as an archive - nothing else references
+-- status, so nothing else needs to change to support it.
+alter table matches add column status text not null default 'active' check (status in ('active', 'ended'));
+alter table matches add column ended_at timestamptz;
+
 -- Direct messages between a matched pair. Written straight from the
 -- frontend (not through the FastAPI backend) - RLS alone fully expresses
 -- the access rule ("only the two people in this match, only as yourself"),
@@ -560,3 +567,33 @@ create policy "Users can add their own check-ins"
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
+
+-- Ethical rematching: the reason a user requested to be rematched is
+-- private to them alone - never visible to their (former) match partner,
+-- so there's no accusatory notification. Ending the match itself (status
+-- -> 'ended') is business logic handled by the backend's admin client
+-- (POST /matches/{id}/rematch), not a direct frontend write, matching how
+-- /matching/run already works - so this table only needs a select/insert
+-- policy for the requester's own reference, no update path for matches
+-- itself.
+create table rematch_requests (
+  id uuid primary key default gen_random_uuid(),
+  match_mentee_id uuid not null references matches(mentee_user_id) on delete cascade,
+  requested_by uuid not null references auth.users(id) on delete cascade,
+  reason text not null check (
+    reason in (
+      'availability_conflict', 'goals_changed', 'mentor_unresponsive',
+      'need_different_expertise', 'personal_circumstances'
+    )
+  ),
+  created_at timestamptz not null default now()
+);
+
+create index rematch_requests_requested_by_idx on rematch_requests (requested_by);
+
+alter table rematch_requests enable row level security;
+
+create policy "Users can read their own rematch requests"
+  on rematch_requests for select
+  to authenticated
+  using (auth.uid() = requested_by);
