@@ -1,13 +1,14 @@
 import Link from "next/link";
+import NavIcon, { type NavIconName } from "@/components/NavIcon";
 
 const TABS = [
-  { key: "overview", label: "Overview" },
-  { key: "chat", label: "Chat" },
-  { key: "availability", label: "Availability" },
-  { key: "journey", label: "Journey" },
-  { key: "notes", label: "Notes" },
-  { key: "checkin", label: "Check-in" },
-  { key: "safety", label: "Safety" },
+  { key: "overview", label: "Overview", icon: "overview" as NavIconName },
+  { key: "chat", label: "Chat", icon: "messages" as NavIconName },
+  { key: "availability", label: "Availability", icon: "availability" as NavIconName },
+  { key: "journey", label: "Journey", icon: "journey" as NavIconName },
+  { key: "notes", label: "Notes", icon: "notes" as NavIconName },
+  { key: "checkin", label: "Check-in", icon: "checkin" as NavIconName },
+  { key: "safety", label: "Safety", icon: "safety" as NavIconName },
 ] as const;
 
 export default function MatchTabs({
@@ -23,12 +24,13 @@ export default function MatchTabs({
         <Link
           key={tab.key}
           href={tab.key === "overview" ? `/match/${id}` : `/match/${id}/${tab.key}`}
-          className={`px-3 py-2 text-sm font-medium ${
+          className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium ${
             active === tab.key
               ? "border-b-2 border-ink text-ink"
               : "text-muted hover:text-ink"
           }`}
         >
+          <NavIcon name={tab.icon} />
           {tab.label}
         </Link>
       ))}

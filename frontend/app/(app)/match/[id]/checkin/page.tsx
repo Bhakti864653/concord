@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireMatch } from "@/lib/matchAuth";
 import MatchTabs from "../MatchTabs";
@@ -41,6 +42,13 @@ export default async function CheckinPage({
         initialSessions={sessions ?? []}
         initialCheckins={checkins ?? []}
       />
+      <p className="text-sm text-muted">
+        Looking to end the match or report a concern instead? That&apos;s under{" "}
+        <Link href={`/match/${id}/safety`} className="font-medium text-ink underline">
+          Trust &amp; safety
+        </Link>
+        .
+      </p>
     </div>
   );
 }

@@ -7,8 +7,11 @@ export type NavIconName =
   | "discover"
   | "rounds"
   | "match"
+  | "overview"
   | "messages"
+  | "availability"
   | "journey"
+  | "notes"
   | "checkin"
   | "safety"
   | "howitworks"
@@ -55,10 +58,31 @@ export default function NavIcon({ name }: { name: NavIconName }) {
           <path d="M12 4.5 13.9 9l4.9.5-3.7 3.2 1.1 4.8L12 15l-4.2 2.5 1.1-4.8-3.7-3.2L9.9 9z" />
         </svg>
       );
+    case "overview":
+      return (
+        <svg {...common} aria-hidden="true">
+          <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+          <circle cx="12" cy="12" r="2.6" />
+        </svg>
+      );
     case "messages":
       return (
         <svg {...common} aria-hidden="true">
           <path d="M4 5.5h16v10H9l-4 3.5v-3.5H4z" />
+        </svg>
+      );
+    case "availability":
+      return (
+        <svg {...common} aria-hidden="true">
+          <rect x="4" y="5.5" width="16" height="14" rx="2.5" />
+          <path d="M4 9.5h16M8.5 3.5v3M15.5 3.5v3" />
+        </svg>
+      );
+    case "notes":
+      return (
+        <svg {...common} aria-hidden="true">
+          <path d="M6 4h9l4 4v12H6z" />
+          <path d="M14.5 4v4.5H19M9 12.5h6M9 16h6" />
         </svg>
       );
     case "journey":
