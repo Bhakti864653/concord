@@ -1,27 +1,28 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import LogoutButton from "@/app/(app)/dashboard/LogoutButton";
+import NavIcon, { type NavIconName } from "@/components/NavIcon";
 
 const MENTORSHIP_LINKS = (primaryMatchId: string | null) => [
-  { href: "/dashboard", label: "Home", icon: "⌘" },
-  { href: "/preferences", label: "Discover", icon: "◎" },
-  { href: "/rounds", label: "Rounds & waitlist", icon: "◷" },
+  { href: "/dashboard", label: "Home", icon: "home" as NavIconName },
+  { href: "/preferences", label: "Discover", icon: "discover" as NavIconName },
+  { href: "/rounds", label: "Rounds & waitlist", icon: "rounds" as NavIconName },
   ...(primaryMatchId
     ? [
-        { href: `/match/${primaryMatchId}`, label: "Your match", icon: "✦" },
-        { href: `/match/${primaryMatchId}/chat`, label: "Messages", icon: "◫" },
-        { href: `/match/${primaryMatchId}/journey`, label: "Goals & sessions", icon: "✓" },
-        { href: `/match/${primaryMatchId}/checkin`, label: "Check-in & rematch", icon: "♡" },
+        { href: `/match/${primaryMatchId}`, label: "Your match", icon: "match" as NavIconName },
+        { href: `/match/${primaryMatchId}/chat`, label: "Messages", icon: "messages" as NavIconName },
+        { href: `/match/${primaryMatchId}/journey`, label: "Goals & sessions", icon: "journey" as NavIconName },
+        { href: `/match/${primaryMatchId}/checkin`, label: "Check-in & rematch", icon: "checkin" as NavIconName },
       ]
     : []),
 ];
 
 const SYSTEM_LINKS = (primaryMatchId: string | null) => [
   ...(primaryMatchId
-    ? [{ href: `/match/${primaryMatchId}/safety`, label: "Trust & safety", icon: "◇" }]
+    ? [{ href: `/match/${primaryMatchId}/safety`, label: "Trust & safety", icon: "safety" as NavIconName }]
     : []),
-  { href: "/how-it-works", label: "How matching works", icon: "⌘" },
-  { href: "/notifications", label: "Notifications", icon: "♧" },
+  { href: "/how-it-works", label: "How matching works", icon: "howitworks" as NavIconName },
+  { href: "/notifications", label: "Notifications", icon: "notifications" as NavIconName },
 ];
 
 export default function Sidebar({
@@ -48,7 +49,9 @@ export default function Sidebar({
             href={item.href}
             className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted transition-colors hover:bg-mentee-tint hover:text-mentee"
           >
-            <span className="w-5 text-center text-base">{item.icon}</span>
+            <span className="flex w-5 justify-center">
+              <NavIcon name={item.icon} />
+            </span>
             <span>{item.label}</span>
           </Link>
         ))}
@@ -60,7 +63,9 @@ export default function Sidebar({
             href={item.href}
             className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted transition-colors hover:bg-mentee-tint hover:text-mentee"
           >
-            <span className="w-5 text-center text-base">{item.icon}</span>
+            <span className="flex w-5 justify-center">
+              <NavIcon name={item.icon} />
+            </span>
             <span>{item.label}</span>
           </Link>
         ))}
@@ -69,7 +74,9 @@ export default function Sidebar({
             href="/admin"
             className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted transition-colors hover:bg-mentee-tint hover:text-mentee"
           >
-            <span className="w-5 text-center text-base">{"⚙"}</span>
+            <span className="flex w-5 justify-center">
+              <NavIcon name="admin" />
+            </span>
             <span>Admin preview</span>
           </Link>
         )}
