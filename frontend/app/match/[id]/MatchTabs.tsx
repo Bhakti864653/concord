@@ -5,6 +5,7 @@ const TABS = [
   { key: "chat", label: "Chat" },
   { key: "availability", label: "Availability" },
   { key: "notes", label: "Notes" },
+  { key: "goals", label: "Goals" },
 ] as const;
 
 export default function MatchTabs({

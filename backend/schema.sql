@@ -316,3 +316,157 @@ create trigger on_message_created
 
 -- Lets the notification bell subscribe to new rows the same way chat does.
 alter publication supabase_realtime add table notifications;
+
+-- Shared goals for a matched pair, capped at 3 (enforced by a trigger,
+-- since a check constraint can't count sibling rows). Same
+-- participants-only RLS shape as match_notes, but both sides can also
+-- update/delete since a goal is jointly owned, not append-only.
+create table match_goals (
+  id uuid primary key default gen_random_uuid(),
+  match_mentee_id uuid not null references matches(mentee_user_id) on delete cascade,
+  title text not null check (char_length(title) between 1 and 300),
+  deadline date,
+  notes text check (notes is null or char_length(notes) <= 2000),
+  created_by uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index match_goals_match_mentee_id_idx on match_goals (match_mentee_id);
+
+alter table match_goals enable row level security;
+
+create policy "Match participants can read goals"
+  on match_goals for select
+  to authenticated
+  using (
+    exists (
+      select 1 from matches m
+      where m.mentee_user_id = match_goals.match_mentee_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+create policy "Match participants can add goals"
+  on match_goals for insert
+  to authenticated
+  with check (
+    created_by = auth.uid()
+    and exists (
+      select 1 from matches m
+      where m.mentee_user_id = match_goals.match_mentee_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+create policy "Match participants can edit goals"
+  on match_goals for update
+  to authenticated
+  using (
+    exists (
+      select 1 from matches m
+      where m.mentee_user_id = match_goals.match_mentee_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  )
+  with check (
+    exists (
+      select 1 from matches m
+      where m.mentee_user_id = match_goals.match_mentee_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+create policy "Match participants can delete goals"
+  on match_goals for delete
+  to authenticated
+  using (
+    exists (
+      select 1 from matches m
+      where m.mentee_user_id = match_goals.match_mentee_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+create or replace function enforce_max_goals_per_match() returns trigger as $$
+begin
+  if (select count(*) from match_goals where match_mentee_id = new.match_mentee_id) >= 3 then
+    raise exception 'A match can have at most 3 shared goals';
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger on_goal_insert_check_max
+  before insert on match_goals
+  for each row execute function enforce_max_goals_per_match();
+
+-- Milestones belong to one goal, with no direct link to a match row - RLS
+-- reaches the pair's identity by joining through match_goals -> matches.
+create table match_milestones (
+  id uuid primary key default gen_random_uuid(),
+  goal_id uuid not null references match_goals(id) on delete cascade,
+  title text not null check (char_length(title) between 1 and 300),
+  done boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index match_milestones_goal_id_idx on match_milestones (goal_id);
+
+alter table match_milestones enable row level security;
+
+create policy "Match participants can read milestones"
+  on match_milestones for select
+  to authenticated
+  using (
+    exists (
+      select 1 from match_goals g
+      join matches m on m.mentee_user_id = g.match_mentee_id
+      where g.id = match_milestones.goal_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+create policy "Match participants can add milestones"
+  on match_milestones for insert
+  to authenticated
+  with check (
+    exists (
+      select 1 from match_goals g
+      join matches m on m.mentee_user_id = g.match_mentee_id
+      where g.id = match_milestones.goal_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+create policy "Match participants can edit milestones"
+  on match_milestones for update
+  to authenticated
+  using (
+    exists (
+      select 1 from match_goals g
+      join matches m on m.mentee_user_id = g.match_mentee_id
+      where g.id = match_milestones.goal_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  )
+  with check (
+    exists (
+      select 1 from match_goals g
+      join matches m on m.mentee_user_id = g.match_mentee_id
+      where g.id = match_milestones.goal_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
+
+create policy "Match participants can delete milestones"
+  on match_milestones for delete
+  to authenticated
+  using (
+    exists (
+      select 1 from match_goals g
+      join matches m on m.mentee_user_id = g.match_mentee_id
+      where g.id = match_milestones.goal_id
+        and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
+    )
+  );
