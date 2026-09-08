@@ -9,29 +9,32 @@
   the mark) is reserved for the one thing this whole app is for: an actual
   agreed match. It should never appear as ordinary decoration.
 
-  "Warm Convergence" direction (chosen from three comparison mockups,
-  2026-09-07): a warmer, more atmospheric evolution of the same role-color
-  system. The `-glow` variants are the same hues at full saturation, meant
-  only for soft blurred backgrounds/gradients (never text) - the plain
-  `--mentee`/`--mentor`/`--accord` tokens are separately darkened to clear
-  4.5:1 contrast against `--paper` for anywhere they carry text or a border.
+  "Concord Prototype" direction (adopted from the ChatGPT-built design
+  reference, 2026-09-08): purple for mentee, coral for mentor - matching the
+  reference's own two-circle brandmark (purple circle, coral circle) -
+  green repurposed as `--accord` (the reference's own "active/matched"
+  status color). The `-glow` variants are the reference's raw, lighter hues,
+  meant only for soft blurred backgrounds/gradients (never text) - the
+  plain `--mentee`/`--mentor`/`--accord` tokens are separately darkened to
+  clear 4.5:1 contrast against `--paper` (verified: 7.77:1, 5.75:1, 5.43:1)
+  for anywhere they carry text or a border.
 */
 :root {
-  --ink: #2b2320;
-  --paper: #fbf3ea;
-  --paper-raised: #fffaf3;
-  --line: #e8dcc9;
-  --muted: #776b5d;
-  --mentee: #ab4a29;
-  --mentee-tint: #f3ded2;
-  --mentee-glow: #c6603f;
-  --mentor: #2e7268;
-  --mentor-tint: #dcebe7;
-  --mentor-glow: #3a8a7d;
-  --accord: #8f6212;
-  --accord-tint: #f1e4c2;
-  --accord-glow: #c9932e;
-  --danger: #a8362b;
+  --ink: #202238;
+  --paper: #fbfaf7;
+  --paper-raised: #ffffff;
+  --line: #e8e5ef;
+  --muted: #727387;
+  --mentee: #514299;
+  --mentee-tint: #eeeafd;
+  --mentee-glow: #6656ad;
+  --mentor: #a64526;
+  --mentor-tint: #fff0eb;
+  --mentor-glow: #f2a58f;
+  --accord: #28735f;
+  --accord-tint: #dceee5;
+  --accord-glow: #4fae8e;
+  --danger: #a54535;
 }
 
 @theme inline {
@@ -51,26 +54,26 @@
   --color-accord-glow: var(--accord-glow);
   --color-danger: var(--danger);
   --font-sans: var(--font-inter);
-  --font-display: var(--font-bricolage);
+  --font-display: var(--font-inter);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --ink: #f5ede2;
-    --paper: #201a14;
-    --paper-raised: #2a2119;
-    --line: #3d3226;
-    --muted: #b3a48f;
-    --mentee: #e0805c;
-    --mentee-tint: #3d2a20;
-    --mentee-glow: #e0805c;
-    --mentor: #5cab9e;
-    --mentor-tint: #1f332e;
-    --mentor-glow: #5cab9e;
-    --accord: #d9ac52;
-    --accord-tint: #3a2e15;
-    --accord-glow: #d9ac52;
-    --danger: #e08a7a;
+    --ink: #f0eef8;
+    --paper: #1a1730;
+    --paper-raised: #221e3a;
+    --line: #332e52;
+    --muted: #a8a6c0;
+    --mentee: #a897e0;
+    --mentee-tint: #2c2350;
+    --mentee-glow: #a897e0;
+    --mentor: #f2a58f;
+    --mentor-tint: #3a251d;
+    --mentor-glow: #f2a58f;
+    --accord: #6dbfa8;
+    --accord-tint: #17322a;
+    --accord-glow: #6dbfa8;
+    --danger: #e2897a;
   }
 }
 

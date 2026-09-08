@@ -1,6 +1,4 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import Logo from "@/components/Logo";
 import { requireMatch } from "@/lib/matchAuth";
 import MatchTabs from "../MatchTabs";
 import AvailabilityPicker from "./AvailabilityPicker";
@@ -23,15 +21,7 @@ export default async function AvailabilityPage({
   ]);
 
   return (
-    <main className="relative mx-auto flex w-full max-w-2xl flex-col gap-4 overflow-hidden p-6">
-      <div
-        aria-hidden="true"
-        className="concord-glow pointer-events-none absolute -right-1/3 -top-1/4 -z-10 h-[70%] w-[70%] opacity-40"
-      />
-      <Link href="/dashboard" className="flex items-center gap-2">
-        <Logo />
-        <span className="font-display font-medium text-ink">Concord</span>
-      </Link>
+    <div className="relative mx-auto flex w-full max-w-2xl flex-col gap-4 overflow-hidden">
       <MatchTabs id={id} active="availability" />
       <div className="flex flex-col gap-1">
         <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
@@ -46,6 +36,6 @@ export default async function AvailabilityPage({
         initialSlots={own?.slots ?? []}
         partnerSlots={partner?.slots ?? []}
       />
-    </main>
+    </div>
   );
 }

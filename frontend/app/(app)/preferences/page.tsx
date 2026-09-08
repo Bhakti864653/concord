@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import Logo from "@/components/Logo";
 import MenteeRanking from "./MenteeRanking";
 import MentorRanking from "./MentorRanking";
 
@@ -46,22 +44,17 @@ export default async function PreferencesPage() {
   const savedLocked: boolean = saved?.locked ?? false;
 
   return (
-    <main className="relative mx-auto flex w-full max-w-2xl flex-col gap-8 overflow-hidden p-6">
-      <div
-        aria-hidden="true"
-        className="concord-glow pointer-events-none absolute -right-1/3 -top-1/4 -z-10 h-[70%] w-[70%] opacity-40"
-      />
-      <Link href="/dashboard" className="flex items-center gap-2">
-        <Logo />
-        <span className="font-display font-medium text-ink">Concord</span>
-      </Link>
+    <div className="mx-auto flex w-full max-w-[1220px] flex-col gap-6">
       <div className="flex flex-col gap-1">
+        <p className="text-xs font-extrabold uppercase tracking-widest text-mentee">
+          Your preferences
+        </p>
         <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
-          Rank your {userType === "mentee" ? "mentors" : "mentees"}
+          Choose who feels right.
         </h1>
-        <p className="text-sm text-muted">
-          We suggested an order based on how well your profiles overlap.
-          Reorder however you like, then lock it in when you&apos;re ready.
+        <p className="max-w-lg text-sm text-muted">
+          We suggested this order from shared goals and lived experience. Reorder however you
+          like, then lock it in when you&apos;re ready. You always have the final say.
         </p>
       </div>
       {userType === "mentee" ? (
@@ -69,6 +62,6 @@ export default async function PreferencesPage() {
       ) : (
         <MentorRanking savedOrder={savedOrder} savedLocked={savedLocked} />
       )}
-    </main>
+    </div>
   );
 }

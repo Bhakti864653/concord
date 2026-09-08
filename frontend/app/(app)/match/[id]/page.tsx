@@ -1,14 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import Logo from "@/components/Logo";
 import { matchReasons } from "@/lib/matchReasons";
 import { requireMatch } from "@/lib/matchAuth";
 import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
 import MatchExplanation from "./MatchExplanation";
 import MatchTabs from "./MatchTabs";
-import RematchButton from "./RematchButton";
-import ReportButton from "./ReportButton";
 
 const TAG_LABELS = new Map(CIRCUMSTANCE_TAGS.map((t) => [t.value, t.label]));
 
@@ -57,16 +54,11 @@ export default async function MatchPage({
         : "Ask them what got them started on this path.";
 
   return (
-    <main className="relative mx-auto flex w-full max-w-2xl flex-col gap-8 overflow-hidden p-6">
+    <div className="relative mx-auto flex w-full max-w-2xl flex-col gap-8 overflow-hidden">
       <div
         aria-hidden="true"
         className="concord-glow pointer-events-none absolute -right-1/3 -top-1/4 -z-10 h-[140%] w-[140%]"
       />
-
-      <Link href="/dashboard" className="relative flex items-center gap-2">
-        <Logo />
-        <span className="font-display font-medium text-ink">Concord</span>
-      </Link>
 
       <div className="relative">
         <MatchTabs id={id} active="overview" />
@@ -144,19 +136,18 @@ export default async function MatchPage({
           This match has ended. You&apos;ll be included in the next matching round.
         </p>
       ) : (
-        <>
+        <div className="relative flex items-center gap-4">
           <Link
             href={`/match/${id}/chat`}
-            className="relative self-start rounded-md bg-ink px-5 py-2.5 font-medium text-paper transition-opacity hover:opacity-90"
+            className="rounded-md bg-ink px-5 py-2.5 font-medium text-paper transition-opacity hover:opacity-90"
           >
             Start chatting
           </Link>
-          <div className="relative flex flex-col gap-2">
-            <RematchButton matchId={id} />
-            <ReportButton matchId={id} />
-          </div>
-        </>
+          <Link href={`/match/${id}/safety`} className="text-sm text-muted underline hover:text-ink">
+            Trust &amp; safety
+          </Link>
+        </div>
       )}
-    </main>
+    </div>
   );
 }

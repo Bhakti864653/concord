@@ -41,6 +41,18 @@ export default async function OnboardingPage() {
         className="concord-glow pointer-events-none absolute -top-1/3 left-1/2 -z-10 h-[120%] w-[160%] -translate-x-1/2"
       />
       <div className={`relative flex flex-col gap-1 border-l-4 pl-4 ${roleColor}`}>
+        <div className="mb-1 flex w-max gap-1 rounded-xl bg-line/60 p-1 text-sm font-semibold">
+          <span
+            className={`rounded-lg px-3 py-1.5 ${userType === "mentee" ? "bg-paper-raised text-ink shadow-sm" : "text-muted"}`}
+          >
+            I&apos;m seeking guidance
+          </span>
+          <span
+            className={`rounded-lg px-3 py-1.5 ${userType === "mentor" ? "bg-paper-raised text-ink shadow-sm" : "text-muted"}`}
+          >
+            I want to mentor
+          </span>
+        </div>
         <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
           Set up your {userType === "mentee" ? "mentee" : "mentor"} profile
         </h1>

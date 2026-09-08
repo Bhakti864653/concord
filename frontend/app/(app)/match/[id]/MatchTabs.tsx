@@ -4,9 +4,10 @@ const TABS = [
   { key: "overview", label: "Overview" },
   { key: "chat", label: "Chat" },
   { key: "availability", label: "Availability" },
-  { key: "sessions", label: "Sessions" },
+  { key: "journey", label: "Journey" },
   { key: "notes", label: "Notes" },
-  { key: "goals", label: "Goals" },
+  { key: "checkin", label: "Check-in" },
+  { key: "safety", label: "Safety" },
 ] as const;
 
 export default function MatchTabs({
@@ -17,7 +18,7 @@ export default function MatchTabs({
   active: (typeof TABS)[number]["key"];
 }) {
   return (
-    <nav className="flex gap-1 border-b border-line">
+    <nav className="flex flex-wrap gap-1 border-b border-line">
       {TABS.map((tab) => (
         <Link
           key={tab.key}
