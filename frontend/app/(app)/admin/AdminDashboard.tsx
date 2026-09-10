@@ -46,7 +46,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="flex justify-between">
+      <section className="flex flex-wrap items-start justify-between gap-3">
         <h2 className="text-sm font-medium text-muted">Matching round</h2>
         <RoundControl status={data.round.status} isAdmin={true} />
       </section>

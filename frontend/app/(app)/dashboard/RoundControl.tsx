@@ -57,8 +57,8 @@ export default function RoundControl({ status, isAdmin }: { status: RoundStatus;
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col items-start gap-1 sm:items-end">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full border border-line bg-paper-raised px-3 py-1 text-xs font-medium text-muted">
           Round: {STATUS_LABELS[status]}
         </span>
@@ -73,7 +73,9 @@ export default function RoundControl({ status, isAdmin }: { status: RoundStatus;
         )}
       </div>
       {isAdmin && !message && (
-        <p className="max-w-[220px] text-right text-xs text-muted">{ADVANCE_DESCRIPTIONS[status]}</p>
+        <p className="max-w-[280px] text-left text-xs text-muted sm:max-w-[220px] sm:text-right">
+          {ADVANCE_DESCRIPTIONS[status]}
+        </p>
       )}
       {message && <p className="text-xs text-muted">{message}</p>}
     </div>
