@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authFetch } from "@/lib/authFetch";
+import { buttonClasses } from "@/components/ui/Button";
 
 type Kind = "report" | "block" | "emergency_end";
 
@@ -53,7 +54,7 @@ export default function ReportButton({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="text-xs text-muted underline hover:text-danger"
+        className="focus-ring rounded text-xs text-muted underline hover:text-danger"
       >
         {trigger}
       </button>
@@ -67,35 +68,41 @@ export default function ReportButton({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-2 rounded-xl border border-line bg-paper-raised p-4"
+      className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-line bg-paper-raised p-4"
     >
       <p className="text-sm font-medium text-ink">
         {messageId ? "Report this message" : "Report, block, or end this match"}
       </p>
       {!messageId && (
-        <select
-          value={kind}
-          onChange={(e) => setKind(e.target.value as Kind)}
-          className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm text-ink focus-ring focus:border-ink"
-        >
-          {(Object.keys(KIND_LABELS) as Kind[]).map((k) => (
-            <option key={k} value={k}>
-              {KIND_LABELS[k]}
-            </option>
-          ))}
-        </select>
+        <label>
+          <span className="sr-only">Report kind</span>
+          <select
+            value={kind}
+            onChange={(e) => setKind(e.target.value as Kind)}
+            className="focus-ring w-full rounded-[var(--radius-control)] border border-line bg-paper px-2 py-1.5 text-sm text-ink focus:border-ink"
+          >
+            {(Object.keys(KIND_LABELS) as Kind[]).map((k) => (
+              <option key={k} value={k}>
+                {KIND_LABELS[k]}
+              </option>
+            ))}
+          </select>
+        </label>
       )}
-      <textarea
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        rows={2}
-        maxLength={1000}
-        placeholder="What happened?"
-        className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm text-ink focus-ring focus:border-ink"
-      />
+      <label>
+        <span className="sr-only">What happened?</span>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={2}
+          maxLength={1000}
+          placeholder="What happened?"
+          className="focus-ring w-full rounded-[var(--radius-control)] border border-line bg-paper px-2 py-1.5 text-sm text-ink focus:border-ink"
+        />
+      </label>
       <p className="text-xs text-muted">
         Reports go to a private review log -{" "}
-        <a href="/community-guidelines" className="underline">
+        <a href="/community-guidelines" className="focus-ring underline">
           see our community guidelines
         </a>
         .
@@ -105,7 +112,7 @@ export default function ReportButton({
         <button
           type="submit"
           disabled={status === "submitting" || !reason.trim()}
-          className="rounded-md bg-danger px-3 py-1.5 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
+          className={buttonClasses("danger", "sm")}
         >
           {status === "submitting" ? "Submitting..." : "Submit"}
         </button>
@@ -113,7 +120,7 @@ export default function ReportButton({
           type="button"
           onClick={() => setOpen(false)}
           disabled={status === "submitting"}
-          className="rounded-md border border-line px-3 py-1.5 text-sm text-ink hover:opacity-70"
+          className={buttonClasses("secondary", "sm")}
         >
           Cancel
         </button>

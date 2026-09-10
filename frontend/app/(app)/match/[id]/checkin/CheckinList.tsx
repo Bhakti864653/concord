@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { buttonClasses } from "@/components/ui/Button";
 
 type Session = { id: string; scheduled_for: string };
 type Checkin = { id: string; session_id: string };
@@ -92,7 +93,7 @@ function CheckinForm({
 
   if (submitted) {
     return (
-      <div className="concord-lift rounded-2xl border border-line bg-paper-raised p-5">
+      <div className="concord-lift rounded-[var(--radius-card)] border border-line bg-paper-raised p-5">
         <p className="text-sm text-accord">
           Thanks - submitted privately for {formattedTime}. Your partner won&apos;t see this.
         </p>
@@ -113,7 +114,7 @@ function CheckinForm({
         });
         setSubmitted(true);
       }}
-      className="concord-lift flex flex-col gap-4 rounded-2xl border border-line bg-paper-raised p-5"
+      className="concord-lift flex flex-col gap-4 rounded-[var(--radius-card)] border border-line bg-paper-raised p-5"
     >
       <div>
         <p className="text-xs font-bold text-muted">PRIVATE CHECK-IN · ABOUT 2 MINUTES</p>
@@ -194,14 +195,14 @@ function CheckinForm({
           onChange={(e) => setFocusNext(e.target.value)}
           rows={2}
           maxLength={1000}
-          className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm font-normal text-ink focus-ring focus:border-ink"
+          className="rounded-[var(--radius-control)] border border-line bg-paper px-2 py-1.5 text-sm font-normal text-ink focus-ring focus:border-ink"
         />
       </label>
 
       <button
         type="submit"
         disabled={didHappen === null || continueWanted === null}
-        className="self-start rounded-xl bg-mentee px-5 py-2.5 text-sm font-bold text-paper-raised transition-opacity hover:opacity-90 disabled:opacity-50"
+        className={`self-start ${buttonClasses("primary")}`}
       >
         Submit privately
       </button>

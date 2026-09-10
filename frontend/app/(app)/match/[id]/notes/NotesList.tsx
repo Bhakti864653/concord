@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { buttonClasses } from "@/components/ui/Button";
 
 type Note = {
   id: string;
@@ -54,36 +55,35 @@ export default function NotesList({
     <div className="flex flex-col gap-4">
       <form
         onSubmit={handleAdd}
-        className="concord-lift flex flex-col gap-3 rounded-2xl border border-line bg-paper-raised p-5"
+        className="concord-lift flex flex-col gap-3 rounded-[var(--radius-card)] border border-line bg-paper-raised p-5"
       >
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          rows={3}
-          maxLength={2000}
-          placeholder="What did you discuss? What's next?"
-          className="rounded-xl border border-line bg-paper px-3 py-2.5 text-sm text-ink focus-ring focus:border-mentee"
-        />
+        <label className="flex flex-col gap-1.5 text-sm text-ink">
+          <span className="sr-only">Note</span>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={3}
+            maxLength={2000}
+            placeholder="What did you discuss? What's next?"
+            className="focus-ring rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2.5 text-sm text-ink focus:border-mentee"
+          />
+        </label>
         {error && <p className="text-sm text-danger">{error}</p>}
-        <button
-          type="submit"
-          disabled={saving || !body.trim()}
-          className="self-start rounded-xl bg-mentee px-5 py-2.5 text-sm font-bold text-paper-raised transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
+        <button type="submit" disabled={saving || !body.trim()} className={`self-start ${buttonClasses("primary")}`}>
           {saving ? "Adding..." : "Add note"}
         </button>
       </form>
 
       <div className="flex flex-col gap-3">
         {notes.length === 0 && (
-          <p className="rounded-2xl border border-dashed border-line p-5 text-center text-sm text-muted">
+          <p className="rounded-[var(--radius-card)] border border-dashed border-line p-5 text-center text-sm text-muted">
             No notes yet - the first one will show up here.
           </p>
         )}
         {notes.map((n) => (
           <div
             key={n.id}
-            className="concord-lift rounded-2xl border-l-4 border-mentee bg-paper-raised p-4"
+            className="concord-lift rounded-[var(--radius-card)] border-l-4 border-mentee bg-paper-raised p-4"
           >
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold tracking-tight text-mentee">

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
+import Card from "@/components/ui/Card";
+import { buttonClasses } from "@/components/ui/Button";
 
 export type RankingItem = {
   id: string;
@@ -95,7 +97,7 @@ export default function RankingList({
           <span>Your preferences are locked in.</span>
           <button
             onClick={() => setLocked(false)}
-            className="font-bold text-accord underline"
+            className="focus-ring rounded font-bold text-accord underline"
             disabled={saving}
           >
             Unlock to edit
@@ -104,7 +106,7 @@ export default function RankingList({
       )}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[360px_1fr] lg:items-start">
-        <div className="concord-lift flex flex-col gap-2 rounded-2xl border border-line bg-paper-raised p-4">
+        <Card padding="sm" className="flex flex-col gap-2">
           <p className="px-1 text-xs font-bold text-muted">SUGGESTED ORDER</p>
           {order.map((id, index) => {
             const item = byId.get(id);
@@ -119,7 +121,7 @@ export default function RankingList({
               >
                 <button
                   onClick={() => setSelectedId(id)}
-                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                  className="focus-ring flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left"
                 >
                   <span
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${
@@ -142,14 +144,14 @@ export default function RankingList({
                     <button
                       onClick={() => move(index, -1)}
                       disabled={index === 0}
-                      className="rounded-md border border-line px-1.5 py-0.5 text-[10px] font-bold text-ink disabled:opacity-30"
+                      className="focus-ring rounded-[var(--radius-control)] border border-line px-1.5 py-0.5 text-[10px] font-bold text-ink disabled:opacity-30"
                     >
                       ▲
                     </button>
                     <button
                       onClick={() => move(index, 1)}
                       disabled={index === order.length - 1}
-                      className="rounded-md border border-line px-1.5 py-0.5 text-[10px] font-bold text-ink disabled:opacity-30"
+                      className="focus-ring rounded-[var(--radius-control)] border border-line px-1.5 py-0.5 text-[10px] font-bold text-ink disabled:opacity-30"
                     >
                       ▼
                     </button>
@@ -158,10 +160,10 @@ export default function RankingList({
               </div>
             );
           })}
-        </div>
+        </Card>
 
         {selected && (
-          <div className="concord-lift flex flex-col gap-4 rounded-2xl border border-line bg-paper-raised p-6">
+          <Card className="flex flex-col gap-4">
             <div className={`h-2 w-16 rounded-full ${accent.bar}`} />
             <div>
               <h2 className="font-display text-xl font-semibold tracking-tight text-ink">
@@ -195,7 +197,7 @@ export default function RankingList({
               <p className="text-xs font-bold text-muted">ABOUT</p>
               <p className="mt-1 text-sm text-ink">{selected.subtitle}</p>
             </div>
-          </div>
+          </Card>
         )}
       </div>
 
@@ -203,18 +205,10 @@ export default function RankingList({
 
       {!locked && (
         <div className="flex gap-3">
-          <button
-            onClick={() => handleSave(false)}
-            disabled={saving}
-            className="rounded-xl border border-line px-4 py-2.5 text-sm font-bold text-ink disabled:opacity-50"
-          >
+          <button onClick={() => handleSave(false)} disabled={saving} className={buttonClasses("secondary")}>
             {saving ? "Saving..." : "Save for later"}
           </button>
-          <button
-            onClick={() => handleSave(true)}
-            disabled={saving}
-            className="rounded-xl bg-mentee px-4 py-2.5 text-sm font-bold text-paper-raised transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
+          <button onClick={() => handleSave(true)} disabled={saving} className={buttonClasses("primary")}>
             {saving ? "Saving..." : "Lock in my preferences"}
           </button>
         </div>

@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import Card from "@/components/ui/Card";
+import Input from "@/components/ui/Input";
+import { buttonClasses } from "@/components/ui/Button";
 
 type Session = {
   id: string;
@@ -70,18 +73,17 @@ export default function SessionsList({
     <div className="flex flex-col gap-4">
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      <form onSubmit={addSession} className="flex gap-2">
-        <input
-          type="datetime-local"
-          value={when}
-          onChange={(e) => setWhen(e.target.value)}
-          className="flex-1 rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus-ring focus:border-ink"
-        />
-        <button
-          type="submit"
-          disabled={!when}
-          className="rounded-md bg-ink px-4 py-2 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
+      <form onSubmit={addSession} className="flex items-end gap-2">
+        <div className="flex-1">
+          <Input
+            label="Session date & time"
+            hideLabel
+            type="datetime-local"
+            value={when}
+            onChange={(e) => setWhen(e.target.value)}
+          />
+        </div>
+        <button type="submit" disabled={!when} className={buttonClasses("primary")}>
           Log session
         </button>
       </form>
@@ -99,15 +101,12 @@ export default function SessionsList({
             timeStyle: "short",
           });
           return (
-            <div
-              key={s.id}
-              className="concord-lift flex flex-col gap-2 rounded-2xl border border-line bg-paper-raised p-4"
-            >
+            <Card key={s.id} padding="sm" className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <p className="font-medium text-ink">{formattedTime}</p>
                 <button
                   onClick={() => deleteSession(s.id)}
-                  className="text-xs text-muted hover:text-danger"
+                  className="focus-ring rounded text-xs text-muted hover:text-danger"
                 >
                   Remove
                 </button>
@@ -119,12 +118,12 @@ export default function SessionsList({
               {isPast && !ownCheckin && (
                 <Link
                   href={`/match/${matchId}/checkin`}
-                  className="text-xs font-medium text-mentee underline"
+                  className="focus-ring text-xs font-medium text-mentee underline"
                 >
                   Check in on this session →
                 </Link>
               )}
-            </div>
+            </Card>
           );
         })}
       </div>

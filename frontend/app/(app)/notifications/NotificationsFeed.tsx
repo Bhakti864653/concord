@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import Card from "@/components/ui/Card";
+import { buttonClasses } from "@/components/ui/Button";
 
 type Notification = {
   id: string;
@@ -63,14 +65,11 @@ export default function NotificationsFeed({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">
-        <button
-          onClick={markAllRead}
-          className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink hover:opacity-70"
-        >
+        <button onClick={markAllRead} className={buttonClasses("secondary", "sm")}>
           Mark all as read
         </button>
       </div>
-      <div className="concord-lift flex flex-col gap-2 rounded-2xl border border-line bg-paper-raised p-2">
+      <Card padding="sm" className="flex flex-col gap-2 !p-2">
         {notifications.length === 0 && (
           <p className="p-4 text-sm text-muted">No notifications yet.</p>
         )}
@@ -80,9 +79,9 @@ export default function NotificationsFeed({
             <Link
               key={n.id}
               href={n.payload.match_id ? `/match/${n.payload.match_id}` : "/dashboard"}
-              className={`flex items-center gap-3 rounded-xl p-3 ${!n.read_at ? "bg-mentee-tint" : "hover:bg-paper"}`}
+              className={`focus-ring flex items-center gap-3 rounded-[var(--radius-control)] p-3 ${!n.read_at ? "bg-mentee-tint" : "hover:bg-paper"}`}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mentee-tint text-mentee">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] bg-mentee-tint text-mentee">
                 {icon}
               </span>
               <div className="min-w-0 flex-1">
@@ -94,7 +93,7 @@ export default function NotificationsFeed({
             </Link>
           );
         })}
-      </div>
+      </Card>
     </div>
   );
 }

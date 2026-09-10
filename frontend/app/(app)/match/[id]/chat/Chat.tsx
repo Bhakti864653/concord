@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import Input from "@/components/ui/Input";
+import { buttonClasses } from "@/components/ui/Button";
 import ReportButton from "../ReportButton";
 
 type Message = {
@@ -131,18 +133,21 @@ export default function Chat({
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      <form onSubmit={handleSend} className="flex gap-2">
-        <input
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Type a message"
-          maxLength={2000}
-          className="flex-1 rounded-xl border border-line bg-paper-raised px-3.5 py-2.5 text-ink focus-ring focus:border-mentee"
-        />
+      <form onSubmit={handleSend} className="flex items-end gap-2">
+        <div className="flex-1">
+          <Input
+            label="Message"
+            hideLabel
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Type a message"
+            maxLength={2000}
+          />
+        </div>
         <button
           type="submit"
           disabled={sending || !body.trim()}
-          className="rounded-xl bg-mentee px-5 py-2.5 font-bold text-paper-raised transition-opacity hover:opacity-90 disabled:opacity-50"
+          className={buttonClasses("primary")}
         >
           Send
         </button>

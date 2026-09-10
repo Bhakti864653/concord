@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import Card from "@/components/ui/Card";
 
 const SECTIONS = [
   {
@@ -46,13 +47,10 @@ export default function CommunityGuidelinesPage() {
       </div>
       <div className="flex flex-col gap-4">
         {SECTIONS.map((s) => (
-          <section
-            key={s.title}
-            className="concord-lift rounded-2xl border border-line bg-paper-raised p-4"
-          >
+          <Card key={s.title} padding="sm" className="block">
             <h2 className="font-medium text-ink">{s.title}</h2>
             <p className="mt-1 text-sm text-muted">{s.body}</p>
-          </section>
+          </Card>
         ))}
       </div>
       </div>

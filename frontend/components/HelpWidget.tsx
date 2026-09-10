@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { matchFaq } from "@/lib/helpFaq";
+import { buttonClasses } from "@/components/ui/Button";
 
 type Entry = { question: string; answer: string };
 
@@ -27,13 +28,13 @@ export default function HelpWidget() {
   return (
     <div className="fixed bottom-5 right-5 z-50">
       {open && (
-        <div className="concord-lift mb-3 w-80 overflow-hidden rounded-2xl border border-line bg-paper-raised">
+        <div className="concord-lift mb-3 w-80 overflow-hidden rounded-[var(--radius-card)] border border-line bg-paper-raised">
           <div className="flex items-center justify-between bg-ink px-4 py-3">
             <span className="font-display text-sm font-semibold text-paper">Concord Help</span>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="text-xs font-medium text-paper/70 hover:text-paper"
+              className="focus-ring rounded text-xs font-medium text-paper/70 hover:text-paper"
             >
               Close
             </button>
@@ -54,16 +55,16 @@ export default function HelpWidget() {
             ))}
           </div>
           <form onSubmit={handleAsk} className="flex gap-2 border-t border-line p-3">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about using Concord..."
-              className="flex-1 rounded-md border border-line bg-paper px-2.5 py-1.5 text-xs text-ink focus-ring focus:border-ink"
-            />
-            <button
-              type="submit"
-              className="rounded-md bg-ink px-3 py-1.5 text-xs font-semibold text-paper transition-opacity hover:opacity-90"
-            >
+            <label className="flex-1">
+              <span className="sr-only">Ask about using Concord</span>
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask about using Concord..."
+                className="focus-ring w-full rounded-[var(--radius-control)] border border-line bg-paper px-2.5 py-1.5 text-xs text-ink focus:border-ink"
+              />
+            </label>
+            <button type="submit" className={buttonClasses("primary", "sm")}>
               Ask
             </button>
           </form>
@@ -73,7 +74,7 @@ export default function HelpWidget() {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-label={open ? "Close help" : "Open help"}
-        className="ml-auto flex h-[52px] w-[52px] items-center justify-center rounded-full bg-ink font-display text-xl font-bold text-paper shadow-lg transition-opacity hover:opacity-90"
+        className="focus-ring ml-auto flex h-[52px] w-[52px] items-center justify-center rounded-full bg-ink font-display text-xl font-bold text-paper shadow-lg transition-opacity hover:opacity-90"
       >
         {open ? "×" : "?"}
       </button>

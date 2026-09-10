@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import Card from "@/components/ui/Card";
 import Sandbox from "./Sandbox";
 
 const STEPS = [
@@ -46,10 +47,7 @@ export default function HowItWorksPage() {
 
       <div className="flex flex-col gap-3">
         {STEPS.map((step, i) => (
-          <div
-            key={step.title}
-            className="concord-lift flex gap-4 rounded-2xl border border-line bg-paper-raised p-4"
-          >
+          <Card key={step.title} padding="sm" className="flex gap-4">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-accord text-sm font-semibold text-accord">
               {i + 1}
             </span>
@@ -57,7 +55,7 @@ export default function HowItWorksPage() {
               <h2 className="font-medium text-ink">{step.title}</h2>
               <p className="mt-1 text-sm text-muted">{step.body}</p>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 

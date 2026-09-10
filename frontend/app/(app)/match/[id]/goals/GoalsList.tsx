@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import Card from "@/components/ui/Card";
+import Input from "@/components/ui/Input";
+import { buttonClasses } from "@/components/ui/Button";
 
 type Goal = {
   id: string;
@@ -124,18 +127,21 @@ export default function GoalsList({
       {error && <p className="text-sm text-danger">{error}</p>}
 
       {goals.length < MAX_GOALS && (
-        <form onSubmit={addGoal} className="flex gap-2">
-          <input
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            maxLength={300}
-            placeholder="e.g. Prepare for university applications"
-            className="flex-1 rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus-ring focus:border-ink"
-          />
+        <form onSubmit={addGoal} className="flex items-end gap-2">
+          <div className="flex-1">
+            <Input
+              label="New goal"
+              hideLabel
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              maxLength={300}
+              placeholder="e.g. Prepare for university applications"
+            />
+          </div>
           <button
             type="submit"
             disabled={saving || !newTitle.trim()}
-            className="rounded-md bg-ink px-4 py-2 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
+            className={buttonClasses("primary")}
           >
             Add goal
           </button>
@@ -190,10 +196,10 @@ function GoalCard({
   const doneCount = milestones.filter((m) => m.done).length;
 
   return (
-    <div className="concord-lift flex flex-col gap-3 rounded-2xl border border-line bg-paper-raised p-4">
+    <Card padding="sm" className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-medium text-ink">{goal.title}</h3>
-        <button onClick={onDelete} className="text-xs text-muted hover:text-danger">
+        <button onClick={onDelete} className="focus-ring rounded text-xs text-muted hover:text-danger">
           Remove
         </button>
       </div>
@@ -232,19 +238,22 @@ function GoalCard({
           onAddMilestone(milestoneTitle);
           setMilestoneTitle("");
         }}
-        className="flex gap-2"
+        className="flex items-end gap-2"
       >
-        <input
-          value={milestoneTitle}
-          onChange={(e) => setMilestoneTitle(e.target.value)}
-          maxLength={300}
-          placeholder="Add a milestone"
-          className="flex-1 rounded-md border border-line bg-paper px-2.5 py-1.5 text-sm text-ink focus-ring focus:border-ink"
-        />
+        <div className="flex-1">
+          <Input
+            label="Add a milestone"
+            hideLabel
+            value={milestoneTitle}
+            onChange={(e) => setMilestoneTitle(e.target.value)}
+            maxLength={300}
+            placeholder="Add a milestone"
+          />
+        </div>
         <button
           type="submit"
           disabled={!milestoneTitle.trim()}
-          className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink transition-opacity hover:opacity-70 disabled:opacity-50"
+          className={buttonClasses("secondary", "sm")}
         >
           Add
         </button>
@@ -258,7 +267,7 @@ function GoalCard({
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
             onBlur={() => onUpdate({ deadline: deadline || null })}
-            className="rounded-md border border-line bg-paper px-2 py-1 text-sm text-ink focus-ring focus:border-ink"
+            className="rounded-[var(--radius-control)] border border-line bg-paper px-2 py-1 text-sm text-ink focus-ring focus:border-ink"
           />
         </label>
         <label className="flex flex-col gap-1 text-xs text-muted sm:col-span-2">
@@ -270,10 +279,10 @@ function GoalCard({
             rows={2}
             maxLength={2000}
             placeholder="Any context worth keeping around"
-            className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm text-ink focus-ring focus:border-ink"
+            className="rounded-[var(--radius-control)] border border-line bg-paper px-2 py-1.5 text-sm text-ink focus-ring focus:border-ink"
           />
         </label>
       </div>
-    </div>
+    </Card>
   );
 }

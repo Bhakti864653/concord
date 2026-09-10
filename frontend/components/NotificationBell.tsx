@@ -80,7 +80,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
       <button
         type="button"
         onClick={handleToggle}
-        className="relative rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink"
+        className="focus-ring relative rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-sm font-medium text-ink"
       >
         Notifications
         {unreadIds.length > 0 && (
@@ -90,7 +90,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
         )}
       </button>
       {open && (
-        <div className="concord-lift absolute right-0 z-10 mt-2 w-64 rounded-xl border border-line bg-paper-raised p-2">
+        <div className="concord-lift absolute right-0 z-10 mt-2 w-64 rounded-[var(--radius-card)] border border-line bg-paper-raised p-2">
           {notifications.length === 0 && (
             <p className="p-2 text-sm text-muted">No notifications yet.</p>
           )}
@@ -99,7 +99,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
               key={n.id}
               href={n.payload.match_id ? `/match/${n.payload.match_id}` : "/dashboard"}
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 rounded-md p-2 text-sm text-ink hover:bg-paper"
+              className="focus-ring flex items-center gap-2.5 rounded-[var(--radius-control)] p-2 text-sm text-ink hover:bg-paper"
             >
               <span
                 aria-hidden="true"

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authFetch } from "@/lib/authFetch";
+import { buttonClasses } from "@/components/ui/Button";
 
 const REASONS = [
   { value: "availability_conflict", label: "Availability conflict" },
@@ -43,7 +44,7 @@ export default function RematchButton({ matchId }: { matchId: string }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="self-start text-xs text-muted underline hover:text-ink"
+        className="focus-ring self-start rounded text-xs text-muted underline hover:text-ink"
       >
         Request a rematch
       </button>
@@ -51,36 +52,39 @@ export default function RematchButton({ matchId }: { matchId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-line bg-paper-raised p-4">
+    <div className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-line bg-paper-raised p-4">
       <p className="text-sm font-medium text-ink">Request a rematch</p>
       <p className="text-xs text-muted">
         This quietly ends the current match - your mentor/mentee won&apos;t be notified of your
         reason, and you&apos;ll be included in the next matching round.
       </p>
-      <select
-        value={reason}
-        onChange={(e) => setReason(e.target.value as (typeof REASONS)[number]["value"])}
-        className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm text-ink focus-ring focus:border-ink"
-      >
-        {REASONS.map((r) => (
-          <option key={r.value} value={r.value}>
-            {r.label}
-          </option>
-        ))}
-      </select>
+      <label>
+        <span className="sr-only">Reason for rematch</span>
+        <select
+          value={reason}
+          onChange={(e) => setReason(e.target.value as (typeof REASONS)[number]["value"])}
+          className="focus-ring w-full rounded-[var(--radius-control)] border border-line bg-paper px-2 py-1.5 text-sm text-ink focus:border-ink"
+        >
+          {REASONS.map((r) => (
+            <option key={r.value} value={r.value}>
+              {r.label}
+            </option>
+          ))}
+        </select>
+      </label>
       {error && <p className="text-sm text-danger">{error}</p>}
       <div className="flex gap-2">
         <button
           onClick={handleConfirm}
           disabled={status === "submitting"}
-          className="rounded-md bg-danger px-3 py-1.5 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
+          className={buttonClasses("danger", "sm")}
         >
           {status === "submitting" ? "Ending match..." : "Confirm rematch request"}
         </button>
         <button
           onClick={() => setOpen(false)}
           disabled={status === "submitting"}
-          className="rounded-md border border-line px-3 py-1.5 text-sm text-ink hover:opacity-70"
+          className={buttonClasses("secondary", "sm")}
         >
           Cancel
         </button>
