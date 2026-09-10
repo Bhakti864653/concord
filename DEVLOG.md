@@ -46,6 +46,34 @@ Before treating any phase of this as finished, I went back through every backend
 
 **What I learned:** this is the third project in a row where a fresh "audit rate limiting specifically" pass found a real gap that a general code read-through hadn't caught earlier. Worth treating as a standing check to repeat on any new endpoint, not something to assume an earlier pass covered permanently.
 
+## From one big matching run to a real round state machine
+
+**Original design:** `/matching/run` wiped the entire `matches` table and recomputed everyone from scratch on every trigger. Fine for a single one-time run, but it meant a second run after someone new joined would reshuffle people who were already happily matched.
+
+**Fix:** Replaced it with `matching_rounds`, a real state machine (`preferences_open` → `preferences_locked` → `matching_in_progress` → `results_available` → a fresh round opens), advanced one step at a time by the admin. The matching run itself became incremental - it only considers mentees who aren't already in an active match, and reduces each mentor's available capacity by their current active-match count, so existing matches are topped up around, never touched.
+
+**Real bug this surfaced:** once a mentor's remaining capacity could genuinely reach 0 (impossible before, since every run started from zero), `gale_shapley.py`'s tentative-acceptance logic called `max()` on an empty sequence when it needed to bump an existing tentative match to make room and found none to bump - a case the original all-at-once design could never trigger. Fixed to reject the proposal outright when capacity is 0 and nothing is currently held, with a dedicated test covering it, and mirrored the same fix in the client-side TypeScript simulator on the `/how-it-works` page.
+
+**What I learned:** changing a "wipe and recompute" design to an incremental one doesn't just change performance characteristics - it introduces genuinely new states (partial capacity, already-matched participants) that the original algorithm implementation had never needed to handle, even though the core matching logic itself didn't change.
+
+## A round got accidentally locked by an unlabeled button
+
+**Problem:** During a redesign session, the production `matching_rounds` row flipped from `preferences_open` to `preferences_locked` with no corresponding deliberate action logged anywhere.
+
+**Root cause:** the admin round-advance buttons had no explanation of what clicking them would actually do - easy to misclick while testing an unrelated part of the same page. Fixed in the same session by adding a one-line plain-language description under each button.
+
+**What I learned:** an irreversible-forward state machine (no "undo," only "advance") needs its trigger buttons to be over-explicit about consequences, especially once real user data (not just test fixtures) can flow through it - a generic "Advance" label is fine for internal testing but not once the action has been clicked for real.
+
+## A template-interpolated Tailwind class that silently produced no CSS
+
+**Problem:** A component picked its accent color with `` `bg-${accentClass}` `` (interpolating a role-derived string into a Tailwind class at runtime). It looked correct and typechecked fine, but rendered with no background color at all.
+
+**Cause:** Tailwind's build-time scanner only picks up class names that appear as complete, literal strings in the source - a runtime-interpolated template string never exists as a literal `bg-something` anywhere in the source for the scanner to find, so the class simply never gets generated into the shipped CSS. No error, no warning - the class just silently does nothing.
+
+**Fix:** Replaced the interpolation with a literal lookup object mapping each role to its full class string, so every possible class name appears literally in the source.
+
+**What I learned:** this class of bug is invisible in code review (it typechecks, it *looks* like it should work) and invisible in the browser console (no error) - the only tell is the actual rendered page missing a style that should be there. Worth specifically distrusting any Tailwind class built via string interpolation rather than a literal, and checking for the pattern (`` `...-${var}` `` inside a `className`) the same way the `.maybe_single()` guard pattern got checked for across the codebase on an earlier project.
+
 ## Known limitations, deliberately left as-is
 
 - **`/matching/suggested-mentors` and `/matching/suggested-mentees` load every profile on the other side into memory and score them one by one.** Fine at the scale this app will ever actually run at (a handful of real users), but it's an O(n) full-table scan with no pagination - a real production version serving many users would need to page this or push the scoring into the database.
