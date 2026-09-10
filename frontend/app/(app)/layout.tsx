@@ -31,11 +31,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     const matchColumn = userType === "mentee" ? "mentee_user_id" : "mentor_user_id";
     const { data: matchRows } = await supabase
       .from("matches")
-      .select("mentee_user_id")
+      .select("id")
       .eq(matchColumn, user.id)
       .eq("status", "active")
       .limit(1);
-    primaryMatchId = matchRows?.[0]?.mentee_user_id ?? null;
+    primaryMatchId = matchRows?.[0]?.id ?? null;
   }
 
   return (

@@ -57,8 +57,8 @@ class FakeAdminClient:
 def _base_tables():
     return {
         "matches": [
-            {"mentee_user_id": "mentee-1", "mentor_user_id": "mentor-1"},
-            {"mentee_user_id": "mentee-2", "mentor_user_id": "mentor-1"},
+            {"id": "match-1", "mentee_user_id": "mentee-1", "mentor_user_id": "mentor-1", "status": "active"},
+            {"id": "match-2", "mentee_user_id": "mentee-2", "mentor_user_id": "mentor-1", "status": "active"},
         ],
         "mentee_profiles": [
             {
@@ -91,7 +91,7 @@ def test_match_explanation_rejects_a_non_participant(monkeypatch):
     monkeypatch.setattr(match_explanation, "get_admin_client", lambda: fake)
 
     with pytest.raises(HTTPException) as exc_info:
-        match_explanation_endpoint("mentee-1", user_id="some-stranger")
+        match_explanation_endpoint("match-1", user_id="some-stranger")
     assert exc_info.value.status_code == 403
 
 
@@ -99,7 +99,7 @@ def test_match_explanation_computes_ranks_reasons_and_capacity(monkeypatch):
     fake = FakeAdminClient(_base_tables())
     monkeypatch.setattr(match_explanation, "get_admin_client", lambda: fake)
 
-    result = match_explanation_endpoint("mentee-1", user_id="mentee-1")
+    result = match_explanation_endpoint("match-1", user_id="mentee-1")
 
     assert result["shared_words"] == ["management", "product"]
     assert result["shared_tags"] == ["first-gen"]

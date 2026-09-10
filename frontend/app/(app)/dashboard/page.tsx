@@ -44,16 +44,17 @@ export default async function DashboardPage() {
     .maybeSingle();
   const preferencesLocked = preferences?.locked ?? false;
 
-  // A mentee is matched at most once (mentee_user_id is the matches table's
-  // primary key), but a mentor with availability_count > 1 can genuinely
-  // have several - so this reads every match row for the current user
-  // rather than assuming (and erroring on) exactly one. The journey path
-  // below tracks the first one; any others are listed separately.
+  // A mentee has at most one *active* match at a time (a partial unique
+  // index on matches enforces this), but a mentor with availability_count
+  // > 1 can genuinely have several - so this reads every match row for the
+  // current user rather than assuming (and erroring on) exactly one. The
+  // journey path below tracks the first one; any others are listed
+  // separately.
   const matchColumn = isMentee ? "mentee_user_id" : "mentor_user_id";
   const counterpartTable = isMentee ? "mentor_profiles" : "mentee_profiles";
   const { data: matchRows } = await supabase
     .from("matches")
-    .select("mentee_user_id, mentor_user_id")
+    .select("id, mentee_user_id, mentor_user_id")
     .eq(matchColumn, user.id)
     .eq("status", "active");
 
@@ -70,10 +71,7 @@ export default async function DashboardPage() {
 
   const matches = (matchRows ?? [])
     .map((m) => ({
-      // mentee_user_id doubles as the match's own id - it's unique per
-      // match even for a mentor with several, since each mentee is only
-      // ever matched once.
-      id: m.mentee_user_id,
+      id: m.id,
       counterpartId: isMentee ? m.mentor_user_id : m.mentee_user_id,
       profile: profileByUserId.get(isMentee ? m.mentor_user_id : m.mentee_user_id),
     }))
@@ -92,7 +90,7 @@ export default async function DashboardPage() {
     const { data: messageRows } = await supabase
       .from("messages")
       .select("id")
-      .eq("match_mentee_id", primaryMatch.id)
+      .eq("match_id", primaryMatch.id)
       .limit(1);
     hasMessage = (messageRows ?? []).length > 0;
 

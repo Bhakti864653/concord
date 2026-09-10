@@ -6,7 +6,7 @@ import RoundControl from "../dashboard/RoundControl";
 
 type Report = {
   id: string;
-  match_mentee_id: string;
+  match_id: string;
   reported_by: string;
   message_id: string | null;
   kind: string;
@@ -70,7 +70,7 @@ export default function AdminDashboard() {
               </div>
               <p className="mt-1 text-ink">{r.reason}</p>
               <p className="mt-1 text-xs text-muted">
-                Match {r.match_mentee_id.slice(0, 8)} - reported by {r.reported_by.slice(0, 8)}
+                Match {r.match_id.slice(0, 8)} - reported by {r.reported_by.slice(0, 8)}
                 {r.message_id && ` - on message ${r.message_id.slice(0, 8)}`}
               </p>
             </div>

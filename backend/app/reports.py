@@ -44,7 +44,7 @@ def submit_report(
     match_result = (
         admin.table("matches")
         .select("mentee_user_id, mentor_user_id, status")
-        .eq("mentee_user_id", match_id)
+        .eq("id", match_id)
         .maybe_single()
         .execute()
     )
@@ -57,20 +57,20 @@ def submit_report(
     if body.message_id:
         message_result = (
             admin.table("messages")
-            .select("id, match_mentee_id")
+            .select("id, match_id")
             .eq("id", body.message_id)
             .maybe_single()
             .execute()
         )
         message = message_result.data if message_result else None
-        if not message or message["match_mentee_id"] != match_id:
+        if not message or message["match_id"] != match_id:
             raise HTTPException(
                 status_code=400, detail="Message does not belong to this match"
             )
 
     admin.table("reports").insert(
         {
-            "match_mentee_id": match_id,
+            "match_id": match_id,
             "reported_by": user_id,
             "message_id": body.message_id,
             "kind": body.kind,
@@ -82,7 +82,7 @@ def submit_report(
     if body.kind in MATCH_ENDING_KINDS and match["status"] == "active":
         admin.table("matches").update(
             {"status": "ended", "ended_at": datetime.now(timezone.utc).isoformat()}
-        ).eq("mentee_user_id", match_id).execute()
+        ).eq("id", match_id).execute()
         match_ended = True
 
     return {"status": "ok", "match_ended": match_ended}

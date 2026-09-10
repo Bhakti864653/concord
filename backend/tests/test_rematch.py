@@ -41,7 +41,7 @@ class FakeMatchesTable:
 
     @property
     def data(self):
-        if self._match and self._filters.get("mentee_user_id") == self._match["mentee_user_id"]:
+        if self._match and self._filters.get("id") == self._match["id"]:
             return self._match
         return None
 
@@ -73,13 +73,13 @@ class FakeAdminClient:
 
 def test_request_rematch_rejects_a_non_participant(monkeypatch):
     fake = FakeAdminClient(
-        {"mentee_user_id": "mentee-1", "mentor_user_id": "mentor-1", "status": "active"}
+        {"id": "match-1", "mentee_user_id": "mentee-1", "mentor_user_id": "mentor-1", "status": "active"}
     )
     monkeypatch.setattr(rematch, "get_admin_client", lambda: fake)
 
     with pytest.raises(HTTPException) as exc_info:
         rematch.request_rematch(
-            "mentee-1",
+            "match-1",
             RematchRequestIn(reason="goals_changed"),
             user_id="some-stranger",
         )
@@ -89,13 +89,13 @@ def test_request_rematch_rejects_a_non_participant(monkeypatch):
 
 def test_request_rematch_rejects_an_already_ended_match(monkeypatch):
     fake = FakeAdminClient(
-        {"mentee_user_id": "mentee-1", "mentor_user_id": "mentor-1", "status": "ended"}
+        {"id": "match-1", "mentee_user_id": "mentee-1", "mentor_user_id": "mentor-1", "status": "ended"}
     )
     monkeypatch.setattr(rematch, "get_admin_client", lambda: fake)
 
     with pytest.raises(HTTPException) as exc_info:
         rematch.request_rematch(
-            "mentee-1",
+            "match-1",
             RematchRequestIn(reason="goals_changed"),
             user_id="mentee-1",
         )
@@ -104,12 +104,12 @@ def test_request_rematch_rejects_an_already_ended_match(monkeypatch):
 
 def test_request_rematch_ends_the_match_and_logs_the_reason_privately(monkeypatch):
     fake = FakeAdminClient(
-        {"mentee_user_id": "mentee-1", "mentor_user_id": "mentor-1", "status": "active"}
+        {"id": "match-1", "mentee_user_id": "mentee-1", "mentor_user_id": "mentor-1", "status": "active"}
     )
     monkeypatch.setattr(rematch, "get_admin_client", lambda: fake)
 
     result = rematch.request_rematch(
-        "mentee-1",
+        "match-1",
         RematchRequestIn(reason="mentor_unresponsive"),
         user_id="mentor-1",
     )
@@ -118,7 +118,7 @@ def test_request_rematch_ends_the_match_and_logs_the_reason_privately(monkeypatc
     assert fake.matches.updated["status"] == "ended"
     assert "ended_at" in fake.matches.updated
     assert fake.rematch_requests.inserted == {
-        "match_mentee_id": "mentee-1",
+        "match_id": "match-1",
         "requested_by": "mentor-1",
         "reason": "mentor_unresponsive",
     }

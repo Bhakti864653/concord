@@ -17,7 +17,7 @@ export default async function CheckinPage({
     supabase
       .from("match_sessions")
       .select("id, scheduled_for")
-      .eq("match_mentee_id", id)
+      .eq("match_id", id)
       .order("scheduled_for", { ascending: false }),
     supabase
       .from("session_checkins")

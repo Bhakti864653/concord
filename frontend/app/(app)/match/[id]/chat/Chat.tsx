@@ -32,7 +32,7 @@ export default function Chat({
       const { data, error } = await supabase
         .from("messages")
         .select("id, sender_id, body, created_at")
-        .eq("match_mentee_id", matchId)
+        .eq("match_id", matchId)
         .order("created_at", { ascending: true });
       if (!active) return;
       if (error) {
@@ -54,7 +54,7 @@ export default function Chat({
           event: "INSERT",
           schema: "public",
           table: "messages",
-          filter: `match_mentee_id=eq.${matchId}`,
+          filter: `match_id=eq.${matchId}`,
         },
         (payload) => {
           const next = payload.new as Message;
@@ -81,7 +81,7 @@ export default function Chat({
     setSending(true);
     setError(null);
     const { error } = await supabase.from("messages").insert({
-      match_mentee_id: matchId,
+      match_id: matchId,
       sender_id: currentUserId,
       body: trimmed,
     });

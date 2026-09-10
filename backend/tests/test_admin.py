@@ -50,7 +50,7 @@ def test_admin_dashboard_assembles_round_reports_and_capacity(monkeypatch):
             "reports": [
                 {
                     "id": "rep-1",
-                    "match_mentee_id": "mentee-1",
+                    "match_id": "match-1",
                     "reported_by": "mentee-1",
                     "message_id": None,
                     "kind": "report",
@@ -80,7 +80,7 @@ def test_admin_dashboard_assembles_round_reports_and_capacity(monkeypatch):
     assert result["reports"] == [
         {
             "id": "rep-1",
-            "match_mentee_id": "mentee-1",
+            "match_id": "match-1",
             "reported_by": "mentee-1",
             "message_id": None,
             "kind": "report",

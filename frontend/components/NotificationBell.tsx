@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 type Notification = {
   id: string;
   kind: string;
-  payload: { match_mentee_id?: string };
+  payload: { match_id?: string };
   read_at: string | null;
   created_at: string;
 };
@@ -97,7 +97,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
           {notifications.slice(0, 10).map((n) => (
             <Link
               key={n.id}
-              href={n.payload.match_mentee_id ? `/match/${n.payload.match_mentee_id}` : "/dashboard"}
+              href={n.payload.match_id ? `/match/${n.payload.match_id}` : "/dashboard"}
               onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 rounded-md p-2 text-sm text-ink hover:bg-paper"
             >

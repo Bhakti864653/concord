@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 type Notification = {
   id: string;
   kind: string;
-  payload: { match_mentee_id?: string };
+  payload: { match_id?: string };
   read_at: string | null;
   created_at: string;
 };
@@ -79,7 +79,7 @@ export default function NotificationsFeed({
           return (
             <Link
               key={n.id}
-              href={n.payload.match_mentee_id ? `/match/${n.payload.match_mentee_id}` : "/dashboard"}
+              href={n.payload.match_id ? `/match/${n.payload.match_id}` : "/dashboard"}
               className={`flex items-center gap-3 rounded-xl p-3 ${!n.read_at ? "bg-mentee-tint" : "hover:bg-paper"}`}
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mentee-tint text-mentee">

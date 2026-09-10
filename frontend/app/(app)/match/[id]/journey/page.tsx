@@ -18,12 +18,12 @@ export default async function JourneyPage({
     supabase
       .from("match_goals")
       .select("id, title, deadline, notes, created_by, created_at")
-      .eq("match_mentee_id", id)
+      .eq("match_id", id)
       .order("created_at", { ascending: true }),
     supabase
       .from("match_sessions")
       .select("id, scheduled_for, created_by, created_at")
-      .eq("match_mentee_id", id)
+      .eq("match_id", id)
       .order("scheduled_for", { ascending: false }),
     supabase
       .from("session_checkins")

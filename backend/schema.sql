@@ -117,11 +117,25 @@ create policy "Users can update their own mentor preferences"
 -- Result of the most recent Gale-Shapley run. Written only by the backend's
 -- admin client (an admin-gated endpoint, not directly by users), but each
 -- side of a match should be able to see who they were paired with.
+--
+-- `id` is a real surrogate primary key, not mentee_user_id - a mentee can
+-- be rematched (see rematch_requests/reports below), which needs a second
+-- row to exist for the same mentee once their first match ends. The
+-- partial unique index enforces the actual invariant instead (at most one
+-- *active* match per mentee at a time), while still letting ended matches
+-- - and everything that references them (chat, notes, goals, sessions) -
+-- stick around as a real archive rather than blocking a new match outright.
 create table matches (
-  mentee_user_id uuid primary key references mentee_profiles(user_id) on delete cascade,
+  id uuid primary key default gen_random_uuid(),
+  mentee_user_id uuid not null references mentee_profiles(user_id) on delete cascade,
   mentor_user_id uuid not null references mentor_profiles(user_id) on delete cascade,
-  matched_at timestamptz not null default now()
+  matched_at timestamptz not null default now(),
+  status text not null default 'active' check (status in ('active', 'ended')),
+  ended_at timestamptz
 );
+
+create unique index matches_one_active_per_mentee
+  on matches (mentee_user_id) where status = 'active';
 
 alter table matches enable row level security;
 
@@ -130,28 +144,19 @@ create policy concord_matches_select
   to authenticated
   using (auth.uid() = mentee_user_id or auth.uid() = mentor_user_id);
 
--- 'ended' (via ethical rematching, below) stops a match counting as
--- "currently matched" on the dashboard, but the row and its chat/notes/
--- goals/sessions stay around as an archive - nothing else references
--- status, so nothing else needs to change to support it.
-alter table matches add column status text not null default 'active' check (status in ('active', 'ended'));
-alter table matches add column ended_at timestamptz;
-
 -- Direct messages between a matched pair. Written straight from the
 -- frontend (not through the FastAPI backend) - RLS alone fully expresses
 -- the access rule ("only the two people in this match, only as yourself"),
--- so there's no extra validation a backend round-trip would add. Uses
--- matches.mentee_user_id as the match's own id throughout, since it's
--- already unique per match.
+-- so there's no extra validation a backend round-trip would add.
 create table messages (
   id uuid primary key default gen_random_uuid(),
-  match_mentee_id uuid not null references matches(mentee_user_id) on delete cascade,
+  match_id uuid not null references matches(id) on delete cascade,
   sender_id uuid not null references auth.users(id) on delete cascade,
   body text not null check (char_length(body) between 1 and 2000),
   created_at timestamptz not null default now()
 );
 
-create index messages_match_mentee_id_created_at_idx on messages (match_mentee_id, created_at);
+create index messages_match_id_created_at_idx on messages (match_id, created_at);
 
 alter table messages enable row level security;
 
@@ -161,7 +166,7 @@ create policy "Match participants can read their messages"
   using (
     exists (
       select 1 from matches m
-      where m.mentee_user_id = messages.match_mentee_id
+      where m.id = messages.match_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
@@ -173,7 +178,7 @@ create policy "Match participants can send messages"
     sender_id = auth.uid()
     and exists (
       select 1 from matches m
-      where m.mentee_user_id = messages.match_mentee_id
+      where m.id = messages.match_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
@@ -215,13 +220,13 @@ create policy "Matched partners can view each other's availability"
 -- pattern as messages, written directly from the frontend.
 create table match_notes (
   id uuid primary key default gen_random_uuid(),
-  match_mentee_id uuid not null references matches(mentee_user_id) on delete cascade,
+  match_id uuid not null references matches(id) on delete cascade,
   author_id uuid not null references auth.users(id) on delete cascade,
   body text not null check (char_length(body) between 1 and 2000),
   created_at timestamptz not null default now()
 );
 
-create index match_notes_match_mentee_id_created_at_idx on match_notes (match_mentee_id, created_at);
+create index match_notes_match_id_created_at_idx on match_notes (match_id, created_at);
 
 alter table match_notes enable row level security;
 
@@ -231,7 +236,7 @@ create policy "Match participants can read notes"
   using (
     exists (
       select 1 from matches m
-      where m.mentee_user_id = match_notes.match_mentee_id
+      where m.id = match_notes.match_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
@@ -243,7 +248,7 @@ create policy "Match participants can add notes"
     author_id = auth.uid()
     and exists (
       select 1 from matches m
-      where m.mentee_user_id = match_notes.match_mentee_id
+      where m.id = match_notes.match_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
@@ -282,12 +287,12 @@ begin
   insert into notifications (user_id, kind, payload)
   values (
     new.mentee_user_id, 'match_created',
-    jsonb_build_object('match_mentee_id', new.mentee_user_id, 'mentor_user_id', new.mentor_user_id)
+    jsonb_build_object('match_id', new.id, 'mentor_user_id', new.mentor_user_id)
   );
   insert into notifications (user_id, kind, payload)
   values (
     new.mentor_user_id, 'match_created',
-    jsonb_build_object('match_mentee_id', new.mentee_user_id, 'mentor_user_id', new.mentor_user_id)
+    jsonb_build_object('match_id', new.id, 'mentor_user_id', new.mentor_user_id)
   );
   return new;
 end;
@@ -304,13 +309,13 @@ begin
   select case when m.mentee_user_id = new.sender_id then m.mentor_user_id else m.mentee_user_id end
   into recipient
   from matches m
-  where m.mentee_user_id = new.match_mentee_id;
+  where m.id = new.match_id;
 
   if recipient is not null then
     insert into notifications (user_id, kind, payload)
     values (
       recipient, 'new_message',
-      jsonb_build_object('match_mentee_id', new.match_mentee_id, 'message_id', new.id)
+      jsonb_build_object('match_id', new.match_id, 'message_id', new.id)
     );
   end if;
   return new;
@@ -330,7 +335,7 @@ alter publication supabase_realtime add table notifications;
 -- update/delete since a goal is jointly owned, not append-only.
 create table match_goals (
   id uuid primary key default gen_random_uuid(),
-  match_mentee_id uuid not null references matches(mentee_user_id) on delete cascade,
+  match_id uuid not null references matches(id) on delete cascade,
   title text not null check (char_length(title) between 1 and 300),
   deadline date,
   notes text check (notes is null or char_length(notes) <= 2000),
@@ -339,7 +344,7 @@ create table match_goals (
   updated_at timestamptz not null default now()
 );
 
-create index match_goals_match_mentee_id_idx on match_goals (match_mentee_id);
+create index match_goals_match_id_idx on match_goals (match_id);
 
 alter table match_goals enable row level security;
 
@@ -349,7 +354,7 @@ create policy "Match participants can read goals"
   using (
     exists (
       select 1 from matches m
-      where m.mentee_user_id = match_goals.match_mentee_id
+      where m.id = match_goals.match_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
@@ -361,7 +366,7 @@ create policy "Match participants can add goals"
     created_by = auth.uid()
     and exists (
       select 1 from matches m
-      where m.mentee_user_id = match_goals.match_mentee_id
+      where m.id = match_goals.match_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
@@ -372,14 +377,14 @@ create policy "Match participants can edit goals"
   using (
     exists (
       select 1 from matches m
-      where m.mentee_user_id = match_goals.match_mentee_id
+      where m.id = match_goals.match_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   )
   with check (
     exists (
       select 1 from matches m
-      where m.mentee_user_id = match_goals.match_mentee_id
+      where m.id = match_goals.match_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
@@ -390,14 +395,14 @@ create policy "Match participants can delete goals"
   using (
     exists (
       select 1 from matches m
-      where m.mentee_user_id = match_goals.match_mentee_id
+      where m.id = match_goals.match_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
 
 create or replace function enforce_max_goals_per_match() returns trigger as $$
 begin
-  if (select count(*) from match_goals where match_mentee_id = new.match_mentee_id) >= 3 then
+  if (select count(*) from match_goals where match_id = new.match_id) >= 3 then
     raise exception 'A match can have at most 3 shared goals';
   end if;
   return new;
@@ -428,7 +433,7 @@ create policy "Match participants can read milestones"
   using (
     exists (
       select 1 from match_goals g
-      join matches m on m.mentee_user_id = g.match_mentee_id
+      join matches m on m.id = g.match_id
       where g.id = match_milestones.goal_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
@@ -440,7 +445,7 @@ create policy "Match participants can add milestones"
   with check (
     exists (
       select 1 from match_goals g
-      join matches m on m.mentee_user_id = g.match_mentee_id
+      join matches m on m.id = g.match_id
       where g.id = match_milestones.goal_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
@@ -452,7 +457,7 @@ create policy "Match participants can edit milestones"
   using (
     exists (
       select 1 from match_goals g
-      join matches m on m.mentee_user_id = g.match_mentee_id
+      join matches m on m.id = g.match_id
       where g.id = match_milestones.goal_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
@@ -460,7 +465,7 @@ create policy "Match participants can edit milestones"
   with check (
     exists (
       select 1 from match_goals g
-      join matches m on m.mentee_user_id = g.match_mentee_id
+      join matches m on m.id = g.match_id
       where g.id = match_milestones.goal_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
@@ -472,7 +477,7 @@ create policy "Match participants can delete milestones"
   using (
     exists (
       select 1 from match_goals g
-      join matches m on m.mentee_user_id = g.match_mentee_id
+      join matches m on m.id = g.match_id
       where g.id = match_milestones.goal_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
@@ -486,13 +491,13 @@ create policy "Match participants can delete milestones"
 -- covers "I got the time wrong").
 create table match_sessions (
   id uuid primary key default gen_random_uuid(),
-  match_mentee_id uuid not null references matches(mentee_user_id) on delete cascade,
+  match_id uuid not null references matches(id) on delete cascade,
   scheduled_for timestamptz not null,
   created_by uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default now()
 );
 
-create index match_sessions_match_mentee_id_idx on match_sessions (match_mentee_id, scheduled_for);
+create index match_sessions_match_id_idx on match_sessions (match_id, scheduled_for);
 
 alter table match_sessions enable row level security;
 
@@ -502,7 +507,7 @@ create policy "Match participants can read sessions"
   using (
     exists (
       select 1 from matches m
-      where m.mentee_user_id = match_sessions.match_mentee_id
+      where m.id = match_sessions.match_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
@@ -514,7 +519,7 @@ create policy "Match participants can add sessions"
     created_by = auth.uid()
     and exists (
       select 1 from matches m
-      where m.mentee_user_id = match_sessions.match_mentee_id
+      where m.id = match_sessions.match_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
@@ -525,7 +530,7 @@ create policy "Match participants can delete sessions"
   using (
     exists (
       select 1 from matches m
-      where m.mentee_user_id = match_sessions.match_mentee_id
+      where m.id = match_sessions.match_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
   );
@@ -562,7 +567,7 @@ create policy "Users can add their own check-ins"
     auth.uid() = user_id
     and exists (
       select 1 from match_sessions s
-      join matches m on m.mentee_user_id = s.match_mentee_id
+      join matches m on m.id = s.match_id
       where s.id = session_checkins.session_id
         and (m.mentee_user_id = auth.uid() or m.mentor_user_id = auth.uid())
     )
@@ -578,7 +583,7 @@ create policy "Users can add their own check-ins"
 -- itself.
 create table rematch_requests (
   id uuid primary key default gen_random_uuid(),
-  match_mentee_id uuid not null references matches(mentee_user_id) on delete cascade,
+  match_id uuid not null references matches(id) on delete cascade,
   requested_by uuid not null references auth.users(id) on delete cascade,
   reason text not null check (
     reason in (
@@ -605,7 +610,7 @@ create policy "Users can read their own rematch requests"
 -- UI yet (feature 8 adds one) - this table is just the durable record.
 create table reports (
   id uuid primary key default gen_random_uuid(),
-  match_mentee_id uuid not null references matches(mentee_user_id) on delete cascade,
+  match_id uuid not null references matches(id) on delete cascade,
   reported_by uuid not null references auth.users(id) on delete cascade,
   message_id uuid references messages(id) on delete set null,
   kind text not null check (kind in ('report', 'block', 'emergency_end')),

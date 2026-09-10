@@ -49,7 +49,7 @@ export default function GoalsList({
     setError(null);
     const { data, error } = await supabase
       .from("match_goals")
-      .insert({ match_mentee_id: matchId, title: trimmed, created_by: currentUserId })
+      .insert({ match_id: matchId, title: trimmed, created_by: currentUserId })
       .select()
       .single();
     setSaving(false);

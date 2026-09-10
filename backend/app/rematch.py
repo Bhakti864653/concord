@@ -39,7 +39,7 @@ def request_rematch(
     match_result = (
         admin.table("matches")
         .select("mentee_user_id, mentor_user_id, status")
-        .eq("mentee_user_id", match_id)
+        .eq("id", match_id)
         .maybe_single()
         .execute()
     )
@@ -56,9 +56,9 @@ def request_rematch(
     # the requester's own reference and never surfaced to their partner.
     admin.table("matches").update(
         {"status": "ended", "ended_at": datetime.now(timezone.utc).isoformat()}
-    ).eq("mentee_user_id", match_id).execute()
+    ).eq("id", match_id).execute()
     admin.table("rematch_requests").insert(
-        {"match_mentee_id": match_id, "requested_by": user_id, "reason": body.reason}
+        {"match_id": match_id, "requested_by": user_id, "reason": body.reason}
     ).execute()
 
     return {"status": "ended"}

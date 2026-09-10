@@ -19,8 +19,8 @@ export async function requireMatch(supabase: SupabaseServerClient, id: string) {
 
   const { data: match } = await supabase
     .from("matches")
-    .select("mentee_user_id, mentor_user_id, status")
-    .eq("mentee_user_id", id)
+    .select("id, mentee_user_id, mentor_user_id, status")
+    .eq("id", id)
     .maybeSingle();
 
   if (!match) {

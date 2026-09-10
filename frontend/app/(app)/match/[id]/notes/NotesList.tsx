@@ -36,7 +36,7 @@ export default function NotesList({
     setError(null);
     const { data, error } = await supabase
       .from("match_notes")
-      .insert({ match_mentee_id: matchId, author_id: currentUserId, body: trimmed })
+      .insert({ match_id: matchId, author_id: currentUserId, body: trimmed })
       .select()
       .single();
     setSaving(false);

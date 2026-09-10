@@ -18,7 +18,7 @@ export default async function NotesPage({
   const { data: notes } = await supabase
     .from("match_notes")
     .select("id, author_id, body, created_at")
-    .eq("match_mentee_id", id)
+    .eq("match_id", id)
     .order("created_at", { ascending: false });
 
   return (

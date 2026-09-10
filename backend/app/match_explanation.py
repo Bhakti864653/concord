@@ -31,7 +31,7 @@ def match_explanation(
     match_result = (
         admin.table("matches")
         .select("mentee_user_id, mentor_user_id")
-        .eq("mentee_user_id", match_id)
+        .eq("id", match_id)
         .maybe_single()
         .execute()
     )
@@ -93,6 +93,7 @@ def match_explanation(
         admin.table("matches")
         .select("mentee_user_id")
         .eq("mentor_user_id", mentor_id)
+        .eq("status", "active")
         .execute()
         .data
         or []

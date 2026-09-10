@@ -86,7 +86,7 @@ class FakeAdminClient:
 
 
 def _match():
-    return {"mentee_user_id": "mentee-1", "mentor_user_id": "mentor-1", "status": "active"}
+    return {"id": "match-1", "mentee_user_id": "mentee-1", "mentor_user_id": "mentor-1", "status": "active"}
 
 
 def test_submit_report_rejects_a_non_participant(monkeypatch):
@@ -95,20 +95,20 @@ def test_submit_report_rejects_a_non_participant(monkeypatch):
 
     with pytest.raises(HTTPException) as exc_info:
         reports.submit_report(
-            "mentee-1", ReportIn(kind="report", reason="spam"), user_id="stranger"
+            "match-1", ReportIn(kind="report", reason="spam"), user_id="stranger"
         )
     assert exc_info.value.status_code == 403
 
 
 def test_submit_report_rejects_a_message_from_a_different_match(monkeypatch):
     fake = FakeAdminClient(
-        _match(), messages=[{"id": "msg-1", "match_mentee_id": "some-other-match"}]
+        _match(), messages=[{"id": "msg-1", "match_id": "some-other-match"}]
     )
     monkeypatch.setattr(reports, "get_admin_client", lambda: fake)
 
     with pytest.raises(HTTPException) as exc_info:
         reports.submit_report(
-            "mentee-1",
+            "match-1",
             ReportIn(kind="report", reason="rude", message_id="msg-1"),
             user_id="mentee-1",
         )
@@ -120,7 +120,7 @@ def test_submit_report_of_kind_report_does_not_end_the_match(monkeypatch):
     monkeypatch.setattr(reports, "get_admin_client", lambda: fake)
 
     result = reports.submit_report(
-        "mentee-1", ReportIn(kind="report", reason="spam"), user_id="mentee-1"
+        "match-1", ReportIn(kind="report", reason="spam"), user_id="mentee-1"
     )
 
     assert result == {"status": "ok", "match_ended": False}
@@ -133,7 +133,7 @@ def test_submit_report_of_kind_block_ends_the_match(monkeypatch):
     monkeypatch.setattr(reports, "get_admin_client", lambda: fake)
 
     result = reports.submit_report(
-        "mentee-1", ReportIn(kind="block", reason="uncomfortable"), user_id="mentor-1"
+        "match-1", ReportIn(kind="block", reason="uncomfortable"), user_id="mentor-1"
     )
 
     assert result == {"status": "ok", "match_ended": True}
@@ -145,7 +145,7 @@ def test_submit_report_of_kind_emergency_end_ends_the_match(monkeypatch):
     monkeypatch.setattr(reports, "get_admin_client", lambda: fake)
 
     result = reports.submit_report(
-        "mentee-1",
+        "match-1",
         ReportIn(kind="emergency_end", reason="unsafe"),
         user_id="mentee-1",
     )
@@ -156,12 +156,12 @@ def test_submit_report_of_kind_emergency_end_ends_the_match(monkeypatch):
 
 def test_submit_report_message_scoped_report_logs_message_id(monkeypatch):
     fake = FakeAdminClient(
-        _match(), messages=[{"id": "msg-1", "match_mentee_id": "mentee-1"}]
+        _match(), messages=[{"id": "msg-1", "match_id": "match-1"}]
     )
     monkeypatch.setattr(reports, "get_admin_client", lambda: fake)
 
     reports.submit_report(
-        "mentee-1",
+        "match-1",
         ReportIn(kind="report", reason="rude", message_id="msg-1"),
         user_id="mentee-1",
     )

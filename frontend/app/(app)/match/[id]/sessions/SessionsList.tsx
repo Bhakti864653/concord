@@ -43,7 +43,7 @@ export default function SessionsList({
     const { data, error } = await supabase
       .from("match_sessions")
       .insert({
-        match_mentee_id: matchId,
+        match_id: matchId,
         scheduled_for: new Date(when).toISOString(),
         created_by: currentUserId,
       })

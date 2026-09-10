@@ -21,7 +21,7 @@ def admin_dashboard(authorization: str | None = Header(default=None)):
 
     reports = (
         admin.table("reports")
-        .select("id, match_mentee_id, reported_by, message_id, kind, reason, created_at")
+        .select("id, match_id, reported_by, message_id, kind, reason, created_at")
         .order("created_at", desc=True)
         .execute()
         .data
