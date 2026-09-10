@@ -1,5 +1,6 @@
 import pytest
 from fastapi import HTTPException
+from supabase_auth.errors import AuthApiError
 
 from app import auth
 
@@ -21,6 +22,16 @@ class FakeSupabaseAuth:
 
     def get_user(self, token):
         return FakeAuthResult(self._user)
+
+
+class RaisingSupabaseAuth:
+    """The real gotrue/supabase-py client raises AuthApiError for an
+    invalid/expired/malformed token rather than returning a falsy result -
+    this simulates that so a regression here (an uncaught 502 instead of a
+    clean 401) gets caught by the suite."""
+
+    def get_user(self, token):
+        raise AuthApiError("invalid JWT: token is malformed", status=401, code="bad_jwt")
 
 
 class FakeAdminClient:
@@ -48,6 +59,16 @@ def test_get_user_id_rejects_a_token_supabase_does_not_recognize(monkeypatch):
     _patch_admin_client(monkeypatch, user=None)
     with pytest.raises(HTTPException) as exc_info:
         auth.get_user_id("Bearer bad-token")
+    assert exc_info.value.status_code == 401
+
+
+def test_get_user_id_rejects_a_token_supabase_raises_on(monkeypatch):
+    class FakeAdminClient:
+        auth = RaisingSupabaseAuth()
+
+    monkeypatch.setattr(auth, "get_admin_client", lambda: FakeAdminClient())
+    with pytest.raises(HTTPException) as exc_info:
+        auth.get_user_id("Bearer stale-or-malformed-token")
     assert exc_info.value.status_code == 401
 
 
