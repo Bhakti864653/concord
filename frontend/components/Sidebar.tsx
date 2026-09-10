@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Logo from "@/components/Logo";
 import LogoutButton from "@/app/(app)/dashboard/LogoutButton";
 import NavIcon, { type NavIconName } from "@/components/NavIcon";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // Chat/our-plan/check-ins/more are tabs inside the match page itself (see
 // MatchTabs) - the sidebar only needs one entry point into that page, not a
@@ -130,8 +131,9 @@ export default function Sidebar({
           )}
         </div>
 
-        <div className="px-3">
+        <div className="flex items-center justify-between px-3">
           <LogoutButton />
+          <ThemeToggle />
         </div>
       </div>
     </aside>
