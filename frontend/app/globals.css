@@ -73,9 +73,16 @@
    color through the tokens below rather than hardcoded hex, so they adapt
    automatically; --danger-tint and --focus-ring (new tokens added this
    pass) get their own dark values here since the original dark block
-   predates them. */
+   predates them.
+
+   Two ways in: the system's own preference (media query, guarded so an
+   explicit `data-theme="light"` from the toggle below can still force light
+   even on a dark system), and an explicit `data-theme="dark"` attribute the
+   toggle sets directly - kept as a literal second copy rather than one
+   shared selector, since custom-property values can't be referenced across
+   separate rule blocks. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
     --ink: #f0eef8;
     --paper: #1a1730;
@@ -95,6 +102,27 @@
     --danger-tint: #3a201b;
     --focus-ring: #86a9ff;
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #f0eef8;
+  --paper: #1a1730;
+  --paper-raised: #221e3a;
+  --line: #332e52;
+  --muted: #a8a6c0;
+  --mentee: #a897e0;
+  --mentee-tint: #2c2350;
+  --mentee-glow: #a897e0;
+  --mentor: #f2a58f;
+  --mentor-tint: #3a251d;
+  --mentor-glow: #f2a58f;
+  --accord: #6dbfa8;
+  --accord-tint: #17322a;
+  --accord-glow: #6dbfa8;
+  --danger: #e2897a;
+  --danger-tint: #3a201b;
+  --focus-ring: #86a9ff;
 }
 
 body {
@@ -125,11 +153,17 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
-  .concord-lift {
+  :root:not([data-theme="light"]) .concord-lift {
     box-shadow:
       0 1px 2px rgba(0, 0, 0, 0.3),
       0 10px 28px -12px rgba(0, 0, 0, 0.5);
   }
+}
+
+:root[data-theme="dark"] .concord-lift {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 10px 28px -12px rgba(0, 0, 0, 0.5);
 }
 
 /* The atmospheric glow behind the landing hero and the match reveal banner -
@@ -152,12 +186,16 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
-  .concord-glow {
+  :root:not([data-theme="light"]) .concord-glow {
     /* Slightly higher than the light-mode 0.16 - the same soft colors read
        a touch fainter against a dark background, so this keeps it equally
        perceptible rather than literally identical. */
     opacity: 0.22;
   }
+}
+
+:root[data-theme="dark"] .concord-glow {
+  opacity: 0.22;
 }
 
 @media (prefers-reduced-motion: no-preference) {
