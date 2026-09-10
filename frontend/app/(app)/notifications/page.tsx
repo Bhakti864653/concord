@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import PageHeader from "@/components/ui/PageHeader";
 import NotificationsFeed from "./NotificationsFeed";
 
 export default async function NotificationsPage() {
@@ -18,14 +19,10 @@ export default async function NotificationsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
-          The updates that matter.
-        </h1>
-        <p className="text-sm text-muted">
-          Messages, matching-round changes, and match updates in one calm feed.
-        </p>
-      </div>
+      <PageHeader
+        title="The updates that matter."
+        subtitle="Messages, matching-round changes, and match updates in one calm feed."
+      />
       <NotificationsFeed userId={user.id} initialNotifications={notifications ?? []} />
     </div>
   );

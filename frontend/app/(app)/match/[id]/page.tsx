@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { matchReasons } from "@/lib/matchReasons";
 import { requireMatch } from "@/lib/matchAuth";
 import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
+import { buttonClasses } from "@/components/ui/Button";
 import MatchExplanation from "./MatchExplanation";
 import MatchTabs from "./MatchTabs";
 
@@ -54,12 +55,19 @@ export default async function MatchPage({
         : "Ask them what got them started on this path.";
 
   return (
-    <div className="relative mx-auto flex w-full max-w-2xl flex-col gap-8 overflow-hidden">
+    // The glow lives on this full-width, unclipped-at-the-content-edge
+    // wrapper rather than on the narrow max-w-2xl reading column below -
+    // clipping it to that column's own bounds gave it a hard, visible
+    // rectangular edge instead of fading into the page. `overflow-hidden`
+    // here still stops the oversized glow div from causing horizontal
+    // scroll, but the clip boundary now sits at the actual content pane's
+    // edge, not partway across it.
+    <div className="relative w-full overflow-hidden">
       <div
         aria-hidden="true"
-        className="concord-glow pointer-events-none absolute -right-1/3 -top-1/4 -z-10 h-[140%] w-[140%]"
+        className="concord-glow pointer-events-none fixed inset-0 -z-10"
       />
-
+      <div className="relative mx-auto flex w-full max-w-2xl flex-col gap-8">
       <div className="relative">
         <MatchTabs id={id} active="overview" />
       </div>
@@ -103,7 +111,14 @@ export default async function MatchPage({
         </h1>
       </div>
 
-      <section className="concord-lift match-reveal-in relative flex flex-col gap-3 rounded-2xl border border-accord bg-accord-tint p-6">
+      {/* Plain card, not the heavy accord-green fill this used to have -
+          "You've been matched!" above already carries the green signal;
+          painting the whole bio block green too read as overbearing for
+          what's just descriptive text. A thin counterpart-role-colored
+          left border gives it identity without the weight. */}
+      <section
+        className={`concord-lift match-reveal-in relative flex flex-col gap-3 rounded-2xl border-l-4 bg-paper-raised p-6 ${isMentee ? "border-mentor" : "border-mentee"}`}
+      >
         <p className="text-sm text-ink">{counterpart.bio}</p>
 
         {!isMentee && (
@@ -137,17 +152,15 @@ export default async function MatchPage({
         </p>
       ) : (
         <div className="relative flex items-center gap-4">
-          <Link
-            href={`/match/${id}/chat`}
-            className="rounded-md bg-ink px-5 py-2.5 font-medium text-paper transition-opacity hover:opacity-90"
-          >
+          <Link href={`/match/${id}/chat`} className={buttonClasses("primary")}>
             Start chatting
           </Link>
-          <Link href={`/match/${id}/safety`} className="text-sm text-muted underline hover:text-ink">
-            Trust &amp; safety
+          <Link href={`/match/${id}/safety`} className="focus-ring text-sm text-muted underline hover:text-ink">
+            More
           </Link>
         </div>
       )}
+      </div>
     </div>
   );
 }

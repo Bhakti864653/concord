@@ -130,7 +130,7 @@ export default function GoalsList({
             onChange={(e) => setNewTitle(e.target.value)}
             maxLength={300}
             placeholder="e.g. Prepare for university applications"
-            className="flex-1 rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:border-ink focus:outline-none"
+            className="flex-1 rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus-ring focus:border-ink"
           />
           <button
             type="submit"
@@ -239,7 +239,7 @@ function GoalCard({
           onChange={(e) => setMilestoneTitle(e.target.value)}
           maxLength={300}
           placeholder="Add a milestone"
-          className="flex-1 rounded-md border border-line bg-paper px-2.5 py-1.5 text-sm text-ink focus:border-ink focus:outline-none"
+          className="flex-1 rounded-md border border-line bg-paper px-2.5 py-1.5 text-sm text-ink focus-ring focus:border-ink"
         />
         <button
           type="submit"
@@ -258,7 +258,7 @@ function GoalCard({
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
             onBlur={() => onUpdate({ deadline: deadline || null })}
-            className="rounded-md border border-line bg-paper px-2 py-1 text-sm text-ink focus:border-ink focus:outline-none"
+            className="rounded-md border border-line bg-paper px-2 py-1 text-sm text-ink focus-ring focus:border-ink"
           />
         </label>
         <label className="flex flex-col gap-1 text-xs text-muted sm:col-span-2">
@@ -270,7 +270,7 @@ function GoalCard({
             rows={2}
             maxLength={2000}
             placeholder="Any context worth keeping around"
-            className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm text-ink focus:border-ink focus:outline-none"
+            className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm text-ink focus-ring focus:border-ink"
           />
         </label>
       </div>

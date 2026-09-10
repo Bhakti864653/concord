@@ -23,12 +23,13 @@ const STEPS = [
 
 export default function HowItWorksPage() {
   return (
-    <main className="relative mx-auto flex w-full max-w-3xl flex-col gap-8 overflow-hidden p-6">
+    <main className="relative w-full overflow-hidden p-6">
       <div
         aria-hidden="true"
-        className="concord-glow pointer-events-none absolute -right-1/3 -top-1/4 -z-10 h-[70%] w-[70%] opacity-40"
+        className="concord-glow pointer-events-none fixed inset-0 -z-10"
       />
-      <Link href="/" className="flex items-center gap-2">
+      <div className="relative mx-auto flex w-full max-w-3xl flex-col gap-8">
+      <Link href="/" className="focus-ring flex items-center gap-2 self-start rounded-lg">
         <Logo />
         <span className="font-display font-medium text-ink">Concord</span>
       </Link>
@@ -71,6 +72,7 @@ export default function HowItWorksPage() {
       </div>
 
       <Sandbox />
+      </div>
     </main>
   );
 }

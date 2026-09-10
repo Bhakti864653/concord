@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authFetch } from "@/lib/authFetch";
 import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
+import { buttonClasses } from "@/components/ui/Button";
 
 export default function MenteeProfileForm() {
   const router = useRouter();
@@ -58,7 +59,7 @@ export default function MenteeProfileForm() {
           placeholder="e.g. breaking into product management"
           value={seekingGuidanceOn}
           onChange={(e) => setSeekingGuidanceOn(e.target.value)}
-          className="rounded-md border border-line bg-paper px-3 py-2 focus:border-mentee focus:outline-none"
+          className="rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2 focus-ring focus:border-mentee"
         />
       </label>
 
@@ -90,7 +91,7 @@ export default function MenteeProfileForm() {
           placeholder="Other (optional)"
           value={otherTagText}
           onChange={(e) => setOtherTagText(e.target.value)}
-          className="rounded-md border border-line bg-paper px-3 py-2 text-sm focus:border-mentee focus:outline-none"
+          className="rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2 text-sm focus-ring focus:border-mentee"
         />
       </fieldset>
 
@@ -102,16 +103,12 @@ export default function MenteeProfileForm() {
           placeholder="A little about you and what you're hoping to get out of mentorship"
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          className="rounded-md border border-line bg-paper px-3 py-2 focus:border-mentee focus:outline-none"
+          className="rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2 focus-ring focus:border-mentee"
         />
       </label>
 
       {error && <p className="text-sm text-danger">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded-md bg-mentee px-3 py-2 font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
-      >
+      <button type="submit" disabled={loading} className={buttonClasses("primary")}>
         {loading ? "Saving..." : "Save profile"}
       </button>
     </form>

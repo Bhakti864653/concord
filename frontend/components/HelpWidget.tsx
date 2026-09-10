@@ -58,7 +58,7 @@ export default function HelpWidget() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about using Concord..."
-              className="flex-1 rounded-md border border-line bg-paper px-2.5 py-1.5 text-xs text-ink focus:border-ink focus:outline-none"
+              className="flex-1 rounded-md border border-line bg-paper px-2.5 py-1.5 text-xs text-ink focus-ring focus:border-ink"
             />
             <button
               type="submit"

@@ -53,8 +53,8 @@ export default function MatchExplanation({
   const partnerRank = isMentee ? data.mentor_rank_of_mentee : data.mentee_rank_of_mentor;
 
   return (
-    <details className="concord-lift group relative rounded-2xl border border-line bg-paper-raised p-4">
-      <summary className="cursor-pointer text-sm font-medium text-ink">
+    <details className="concord-lift group relative rounded-[var(--radius-card)] border border-line bg-paper-raised p-4">
+      <summary className="focus-ring cursor-pointer rounded-md text-sm font-medium text-ink">
         Why this match?
       </summary>
       <div className="mt-3 flex flex-col gap-2 text-sm text-ink">

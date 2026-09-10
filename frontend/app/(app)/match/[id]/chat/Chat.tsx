@@ -137,7 +137,7 @@ export default function Chat({
           onChange={(e) => setBody(e.target.value)}
           placeholder="Type a message"
           maxLength={2000}
-          className="flex-1 rounded-xl border border-line bg-paper-raised px-3.5 py-2.5 text-ink focus:border-mentee focus:outline-none"
+          className="flex-1 rounded-xl border border-line bg-paper-raised px-3.5 py-2.5 text-ink focus-ring focus:border-mentee"
         />
         <button
           type="submit"

@@ -1,71 +1,103 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { buttonClasses } from "@/components/ui/Button";
 
 export default function Home() {
   return (
     <main className="relative flex min-h-screen flex-1 items-center overflow-hidden px-6 py-10 sm:px-12 sm:py-16">
       <div
         aria-hidden="true"
-        className="concord-mark-fade concord-glow pointer-events-none absolute -right-1/4 top-0 -z-10 h-full w-full sm:-right-10"
+        className="concord-mark-fade concord-glow pointer-events-none fixed inset-0 -z-10"
       />
 
-      {/* A small nod to the empty right half on wide screens with the same
-          two-circle motif as the logo, instead of leaving it totally blank -
-          kept subtle, not a dominant shape. */}
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 28 24"
-        className="pointer-events-none absolute right-24 top-1/2 -z-10 hidden h-[220px] w-[260px] -translate-y-1/2 opacity-[0.14] lg:block"
-      >
-        <circle cx="10" cy="12" r="9" fill="none" stroke="var(--mentee)" strokeWidth="0.7" />
-        <circle cx="18" cy="12" r="9" fill="none" stroke="var(--mentor)" strokeWidth="0.7" />
-      </svg>
-
-      <div className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center gap-8 sm:max-w-none">
-        <div className="flex items-center gap-2">
-          <Logo />
-          <span className="font-display text-sm font-medium tracking-tight text-muted">Concord</span>
-        </div>
-
-        <div className="flex flex-col gap-8 sm:max-w-md">
-          <h1 className="font-display text-6xl leading-[0.95] font-semibold tracking-tight text-ink sm:text-7xl">
-            Find the mentor who already walked your path.
-          </h1>
-
-          <p className="max-w-sm text-lg text-muted">
-            Mentees and mentors each rank who they&apos;d most want to work with.
-            Concord matches both sides with stable matching, so the pairing
-            holds up - not a popularity contest, not a coin flip.
-          </p>
-
-          <div className="flex gap-3">
-            <Link
-              href="/signup"
-              className="rounded-xl bg-mentee px-5 py-2.5 font-bold text-paper-raised transition-opacity hover:opacity-90"
-            >
-              Sign up
-            </Link>
-            <Link
-              href="/login"
-              className="rounded-xl border border-line px-5 py-2.5 font-medium text-ink transition-colors hover:border-mentee hover:text-mentee"
-            >
-              Log in
-            </Link>
+      <div className="relative mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 items-center gap-12 lg:grid-cols-[1.15fr_.85fr]">
+        <div className="flex flex-col gap-8">
+          <div className="flex items-center gap-2">
+            <Logo />
+            <span className="font-display text-sm font-medium tracking-tight text-muted">Concord</span>
           </div>
 
-          <HowItWorks />
+          <div className="flex flex-col gap-8">
+            <h1 className="font-display text-6xl leading-[0.98] font-semibold tracking-tight text-ink sm:text-7xl">
+              Find the mentor who already walked your path.
+            </h1>
 
-          <div className="flex gap-4">
-            <Link href="/how-it-works" className="text-xs text-muted underline hover:text-ink">
-              How the matching algorithm works
-            </Link>
-            <Link href="/community-guidelines" className="text-xs text-muted underline hover:text-ink">
-              Community guidelines
-            </Link>
+            <p className="max-w-lg text-lg text-muted">
+              Mentees and mentors each rank who they&apos;d most want to work with.
+              Concord matches both sides with stable matching, so the pairing
+              holds up - not a popularity contest, not a coin flip.
+            </p>
+
+            <div className="flex gap-3">
+              <Link href="/signup" className={buttonClasses("primary")}>
+                Sign up
+              </Link>
+              <Link href="/login" className={buttonClasses("secondary")}>
+                Log in
+              </Link>
+            </div>
+
+            <HowItWorks />
+
+            <div className="flex gap-4">
+              <Link href="/how-it-works" className="focus-ring text-xs text-muted underline hover:text-ink">
+                How the matching algorithm works
+              </Link>
+              <Link href="/community-guidelines" className="focus-ring text-xs text-muted underline hover:text-ink">
+                Community guidelines
+              </Link>
+            </div>
           </div>
         </div>
+
+        {/* A fictional, fabricated preview of what a completed match looks
+            like - fills what used to be an almost-empty right half on wide
+            screens with an actual product glimpse instead of decoration. */}
+        <MatchPreview />
       </div>
     </main>
+  );
+}
+
+function MatchPreview() {
+  return (
+    <div aria-hidden="true" className="hidden justify-self-center lg:block">
+      <div className="concord-lift w-full max-w-sm rounded-[22px] border border-line bg-paper-raised p-6">
+        <div className="flex items-center gap-2 text-xs font-semibold text-accord">
+          <svg width="18" height="14" viewBox="0 0 28 24">
+            <circle cx="10" cy="12" r="9" fill="var(--mentee-glow)" fillOpacity="0.7" />
+            <circle cx="18" cy="12" r="9" fill="var(--mentor-glow)" fillOpacity="0.9" />
+          </svg>
+          You&apos;ve been matched!
+        </div>
+
+        <div className="mt-5 flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-mentee-tint text-sm font-bold text-mentee">
+            AK
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-ink">Amara K.</p>
+            <p className="text-xs text-muted">Mentee - breaking into product design</p>
+          </div>
+        </div>
+
+        <div className="my-2 ml-5 h-5 w-0.5 bg-line" />
+
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-mentor-tint text-sm font-bold text-mentor">
+            JP
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-ink">Jordan P.</p>
+            <p className="text-xs text-muted">Mentor - 8 years in product design</p>
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-[var(--radius-control)] bg-accord-tint p-3 text-xs text-accord">
+          You both mentioned user research - ask them what got them started.
+        </div>
+      </div>
+    </div>
   );
 }
 

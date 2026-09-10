@@ -38,7 +38,10 @@ export function buildJourney(input: {
 
   const matchHref = matched && matchId ? `/match/${matchId}` : null;
   const chatHref = matched && matchId ? `/match/${matchId}/chat` : null;
-  const availabilityHref = matched && matchId ? `/match/${matchId}/availability` : null;
+  // Availability now lives as a section on the "Our Plan" page (the
+  // /journey route), not its own tab - point here instead of the old
+  // standalone /availability route (which now just redirects here anyway).
+  const availabilityHref = matched && matchId ? `/match/${matchId}/journey` : null;
 
   return [
     {

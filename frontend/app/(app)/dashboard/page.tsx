@@ -142,53 +142,49 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1220px] flex-col gap-6">
-      <header className="flex h-[64px] items-center justify-between">
-        <p className="text-xs font-extrabold uppercase tracking-widest text-mentee">
-          Mentorship, thoughtfully matched
-        </p>
-        <div className="flex items-center gap-3">
-          <NotificationBell userId={user.id} />
-          {isAdmin && (
-            <Link href="/admin" className="text-xs text-muted underline hover:text-ink">
-              Admin
-            </Link>
-          )}
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[1.3fr_.8fr]">
-        <div className="concord-lift relative overflow-hidden rounded-[22px] bg-gradient-to-br from-mentee-glow via-mentee to-mentee p-7 text-paper-raised">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-24 -top-12 h-64 w-64 rounded-full border-2 border-white/15"
-          />
-          <div className="relative flex items-center gap-2 text-sm font-bold">
-            <i aria-hidden="true" className="h-2 w-2 rounded-full bg-accord-glow" />
-            Round: {roundStatus.replaceAll("_", " ")}
-          </div>
-          <h2 className="relative mt-3 max-w-md text-[26px] font-bold leading-tight tracking-tight">
-            {roundHeadline[roundStatus]}
-          </h2>
-          <p className="relative mt-2 max-w-md text-white/85">
-            {primaryMatch
-              ? "Keep the conversation moving - shared goals and a session or two go a long way."
-              : "We found people who understand both where you want to go and where you're coming from."}
+      {/* One main status card: what's happening this round, and the one
+          obvious next action - merges what used to be a separate header
+          bar plus its own gradient card. */}
+      <div className="concord-lift relative overflow-hidden rounded-[22px] bg-gradient-to-br from-mentee-glow via-mentee to-mentee p-7 text-paper-raised">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-24 -top-12 h-64 w-64 rounded-full border-2 border-white/15"
+        />
+        <div className="relative flex items-center justify-between">
+          <p className="text-xs font-extrabold uppercase tracking-widest text-paper-raised/80">
+            Mentorship, thoughtfully matched
           </p>
-          <Link
-            href={primaryMatch ? `/match/${primaryMatch.id}` : "/preferences"}
-            className="relative mt-4 inline-block rounded-xl bg-paper-raised px-4 py-2.5 font-bold text-mentee"
-          >
-            {primaryMatch ? "Go to your match →" : "Review your ranking →"}
-          </Link>
+          <NotificationBell userId={user.id} />
         </div>
+        <div className="relative mt-4 flex items-center gap-2 text-sm font-bold">
+          <i aria-hidden="true" className="h-2 w-2 rounded-full bg-accord-glow" />
+          Round: {roundStatus.replaceAll("_", " ")}
+        </div>
+        <h2 className="relative mt-3 max-w-md text-[26px] font-bold leading-tight tracking-tight">
+          {roundHeadline[roundStatus]}
+        </h2>
+        <p className="relative mt-2 max-w-md text-white/85">
+          {primaryMatch
+            ? "Keep the conversation moving - shared goals and a session or two go a long way."
+            : "We found people who understand both where you want to go and where you're coming from."}
+        </p>
+        <Link
+          href={primaryMatch ? `/match/${primaryMatch.id}` : "/preferences"}
+          className="focus-ring relative mt-4 inline-block rounded-[var(--radius-control)] bg-paper-raised px-4 py-2.5 font-bold text-mentee"
+        >
+          {primaryMatch ? "Go to your match →" : "Review your ranking →"}
+        </Link>
+      </div>
 
-        <div className="concord-lift rounded-[22px] border border-line bg-paper-raised p-5">
-          <p className="mb-1 text-xs font-bold text-muted">YOUR JOURNEY</p>
-          <RoundControl status={roundStatus} isAdmin={!!isAdmin} />
-          <div className="mt-4">
-            <JourneyPath steps={journey} />
-          </div>
+      {/* One compact journey display. RoundControl only ever renders its
+          admin button for the one admin account, so this stays invisible
+          to everyone else - it's not wrapped in its own card anymore. */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold text-muted">YOUR JOURNEY</p>
+          {isAdmin && <RoundControl status={roundStatus} isAdmin={!!isAdmin} />}
         </div>
+        <JourneyPath steps={journey} />
       </div>
 
       {isWaitlisted && (
@@ -198,34 +194,26 @@ export default async function DashboardPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+      {/* At most 2 secondary cards. */}
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
         <Link
           href="/rounds"
-          className="concord-lift rounded-[18px] border border-line bg-paper-raised p-4"
+          className="focus-ring concord-lift rounded-[18px] border border-line bg-paper-raised p-4"
         >
-          <p className="font-semibold text-ink">Matching round</p>
+          <p className="font-semibold text-ink">Rounds &amp; how matching works</p>
           <p className="mt-1 text-sm text-muted">
-            Track exactly where this round stands and what happens next.
+            Where this round stands, and how the algorithm decides matches.
           </p>
         </Link>
         {primaryMatch && (
           <Link
             href={`/match/${primaryMatch.id}/journey`}
-            className="concord-lift rounded-[18px] border border-line bg-paper-raised p-4"
+            className="focus-ring concord-lift rounded-[18px] border border-line bg-paper-raised p-4"
           >
-            <p className="font-semibold text-ink">Your goals</p>
-            <p className="mt-1 text-sm text-muted">Shared goals, milestones, and sessions.</p>
+            <p className="font-semibold text-ink">Our plan</p>
+            <p className="mt-1 text-sm text-muted">Availability, goals, sessions, and notes.</p>
           </Link>
         )}
-        <Link
-          href="/how-it-works"
-          className="concord-lift rounded-[18px] border border-line bg-paper-raised p-4"
-        >
-          <p className="font-semibold text-ink">How matching works</p>
-          <p className="mt-1 text-sm text-muted">
-            Mutual preferences matter - not just a compatibility number.
-          </p>
-        </Link>
       </div>
 
       {primaryMatch && <MatchExplanation matchId={primaryMatch.id} isMentee={isMentee} />}
@@ -245,10 +233,10 @@ export default async function DashboardPage() {
                   {isMentee ? profile.mentors_in : profile.seeking_guidance_on}
                 </p>
                 <div className="flex items-center gap-4 text-sm font-medium text-ink">
-                  <Link href={`/match/${id}`} className="underline">
+                  <Link href={`/match/${id}`} className="focus-ring underline">
                     View match
                   </Link>
-                  <Link href={`/match/${id}/chat`} className="underline">
+                  <Link href={`/match/${id}/chat`} className="focus-ring underline">
                     Chat
                   </Link>
                 </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { authFetch } from "@/lib/authFetch";
+import Card from "@/components/ui/Card";
 import RoundControl from "../dashboard/RoundControl";
 
 type Report = {
@@ -60,10 +61,7 @@ export default function AdminDashboard() {
         )}
         <div className="flex flex-col gap-2">
           {data.reports.map((r) => (
-            <div
-              key={r.id}
-              className="concord-lift rounded-xl border border-line bg-paper-raised p-3 text-sm"
-            >
+            <Card key={r.id} padding="sm" className="text-sm">
               <div className="flex items-center justify-between">
                 <span className="font-medium capitalize text-ink">{r.kind.replace("_", " ")}</span>
                 <span className="text-xs text-muted">{new Date(r.created_at).toLocaleString()}</span>
@@ -73,7 +71,7 @@ export default function AdminDashboard() {
                 Match {r.match_id.slice(0, 8)} - reported by {r.reported_by.slice(0, 8)}
                 {r.message_id && ` - on message ${r.message_id.slice(0, 8)}`}
               </p>
-            </div>
+            </Card>
           ))}
         </div>
       </section>
@@ -82,15 +80,12 @@ export default function AdminDashboard() {
         <h2 className="text-sm font-medium text-muted">Mentor capacity</h2>
         <div className="flex flex-col gap-2">
           {data.mentor_capacity.map((m) => (
-            <div
-              key={m.user_id}
-              className="concord-lift flex items-center justify-between rounded-xl border border-line bg-paper-raised p-3 text-sm"
-            >
+            <Card key={m.user_id} padding="sm" className="flex items-center justify-between text-sm">
               <span className="text-ink">{m.mentors_in}</span>
               <span className="text-muted">
                 {m.active_count}/{m.capacity} filled
               </span>
-            </div>
+            </Card>
           ))}
         </div>
       </section>

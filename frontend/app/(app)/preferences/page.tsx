@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import PageHeader from "@/components/ui/PageHeader";
 import MenteeRanking from "./MenteeRanking";
 import MentorRanking from "./MentorRanking";
 
@@ -45,18 +46,11 @@ export default async function PreferencesPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1220px] flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <p className="text-xs font-extrabold uppercase tracking-widest text-mentee">
-          Your preferences
-        </p>
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
-          Choose who feels right.
-        </h1>
-        <p className="max-w-lg text-sm text-muted">
-          We suggested this order from shared goals and lived experience. Reorder however you
-          like, then lock it in when you&apos;re ready. You always have the final say.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Your preferences"
+        title="Choose who feels right."
+        subtitle="We suggested this order from shared goals and lived experience. Reorder however you like, then lock it in when you're ready. You always have the final say."
+      />
       {userType === "mentee" ? (
         <MenteeRanking savedOrder={savedOrder} savedLocked={savedLocked} />
       ) : (

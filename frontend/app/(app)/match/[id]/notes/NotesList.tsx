@@ -62,7 +62,7 @@ export default function NotesList({
           rows={3}
           maxLength={2000}
           placeholder="What did you discuss? What's next?"
-          className="rounded-xl border border-line bg-paper px-3 py-2.5 text-sm text-ink focus:border-mentee focus:outline-none"
+          className="rounded-xl border border-line bg-paper px-3 py-2.5 text-sm text-ink focus-ring focus:border-mentee"
         />
         {error && <p className="text-sm text-danger">{error}</p>}
         <button

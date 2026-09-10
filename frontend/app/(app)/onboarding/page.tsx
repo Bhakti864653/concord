@@ -35,11 +35,12 @@ export default async function OnboardingPage() {
   const roleColor = userType === "mentee" ? "border-mentee" : "border-mentor";
 
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center gap-6 overflow-hidden p-6">
+    <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden p-6">
       <div
         aria-hidden="true"
-        className="concord-glow pointer-events-none absolute -top-1/3 left-1/2 -z-10 h-[120%] w-[160%] -translate-x-1/2"
+        className="concord-glow pointer-events-none fixed inset-0 -z-10"
       />
+      <div className="relative mx-auto flex w-full max-w-lg flex-col gap-6">
       <div className={`relative flex flex-col gap-1 border-l-4 pl-4 ${roleColor}`}>
         <div className="mb-1 flex w-max gap-1 rounded-xl bg-line/60 p-1 text-sm font-semibold">
           <span
@@ -61,6 +62,7 @@ export default async function OnboardingPage() {
         </p>
       </div>
       {userType === "mentee" ? <MenteeProfileForm /> : <MentorProfileForm />}
+      </div>
     </main>
   );
 }

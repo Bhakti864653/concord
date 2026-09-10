@@ -60,7 +60,7 @@ export default function RematchButton({ matchId }: { matchId: string }) {
       <select
         value={reason}
         onChange={(e) => setReason(e.target.value as (typeof REASONS)[number]["value"])}
-        className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm text-ink focus:border-ink focus:outline-none"
+        className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm text-ink focus-ring focus:border-ink"
       >
         {REASONS.map((r) => (
           <option key={r.value} value={r.value}>

@@ -76,7 +76,7 @@ export default function ReportButton({
         <select
           value={kind}
           onChange={(e) => setKind(e.target.value as Kind)}
-          className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm text-ink focus:border-ink focus:outline-none"
+          className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm text-ink focus-ring focus:border-ink"
         >
           {(Object.keys(KIND_LABELS) as Kind[]).map((k) => (
             <option key={k} value={k}>
@@ -91,7 +91,7 @@ export default function ReportButton({
         rows={2}
         maxLength={1000}
         placeholder="What happened?"
-        className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm text-ink focus:border-ink focus:outline-none"
+        className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm text-ink focus-ring focus:border-ink"
       />
       <p className="text-xs text-muted">
         Reports go to a private review log -{" "}

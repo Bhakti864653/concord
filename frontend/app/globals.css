@@ -20,6 +20,7 @@
   for anywhere they carry text or a border.
 */
 :root {
+  color-scheme: light;
   --ink: #202238;
   --paper: #fbfaf7;
   --paper-raised: #ffffff;
@@ -35,6 +36,13 @@
   --accord-tint: #dceee5;
   --accord-glow: #4fae8e;
   --danger: #a54535;
+  --danger-tint: #fbeae6;
+  --focus-ring: #2f5fdb;
+
+  /* Shared radius scale so Button/Card/Input/Badge agree on how rounded
+     things are, instead of each hand-picking rounded-md/-xl/-2xl. */
+  --radius-control: 0.625rem; /* buttons, inputs, small pills */
+  --radius-card: 1rem; /* cards, panels */
 }
 
 @theme inline {
@@ -53,10 +61,20 @@
   --color-accord-tint: var(--accord-tint);
   --color-accord-glow: var(--accord-glow);
   --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+  --color-focus-ring: var(--focus-ring);
   --font-sans: var(--font-inter);
-  --font-display: var(--font-inter);
+  --font-display: var(--font-bricolage);
 }
 
+/* Dark mode is deliberately neutralized for the 2026-09 redesign - the old
+   dark token set below predates the new light-only visual system and was
+   never re-verified against it, so leaving it auto-active would silently
+   mix old dark values with new light-only components for anyone on a dark
+   OS preference. `color-scheme: light` above stops the browser's own UI
+   (scrollbars, form controls) from switching too. Revisit as its own pass
+   once the light redesign is done - kept here, commented, rather than
+   deleted, so re-enabling later is a one-line uncomment.
 @media (prefers-color-scheme: dark) {
   :root {
     --ink: #f0eef8;
@@ -76,10 +94,23 @@
     --danger: #e2897a;
   }
 }
+*/
 
 body {
   background: var(--paper);
   color: var(--ink);
+}
+
+/* Shared keyboard-focus treatment for the new Button/Input/nav-link
+   primitives - a visible ring on :focus-visible only (so mouse clicks
+   don't show it), replacing the old pattern of `focus:outline-none` with
+   nothing put back in its place. */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 /* A warm-tinted lift for surfaces that need to visually separate from the
@@ -92,6 +123,7 @@ body {
     0 10px 28px -12px color-mix(in srgb, var(--ink) 18%, transparent);
 }
 
+/* Dark-mode override neutralized along with the token block above.
 @media (prefers-color-scheme: dark) {
   .concord-lift {
     box-shadow:
@@ -99,25 +131,34 @@ body {
       0 10px 28px -12px rgba(0, 0, 0, 0.5);
   }
 }
+*/
 
 /* The atmospheric glow behind the landing hero and the match reveal banner -
    the two role colors bleeding into each other, standing in for "two people
    converging." Meant to sit behind content, at low opacity, never under text
    without a solid layer between (see --mentee/--mentor for the text-safe,
-   darker versions of the same hues). */
+   darker versions of the same hues).
+
+   2026-09 redesign: softened considerably - the original (0.35 opacity,
+   60px blur, hard 55% falloff) read as a forced, distinctly-shaped tinted
+   wash sitting on top of the page rather than something ambient behind it.
+   Lower opacity, a much longer blur, and a slower gradient falloff blend
+   the two colors into a gentler, more diffuse wash with no visible edge. */
 .concord-glow {
   background:
-    radial-gradient(circle at 30% 40%, var(--mentee-glow) 0%, transparent 55%),
-    radial-gradient(circle at 66% 45%, var(--mentor-glow) 0%, transparent 55%);
-  filter: blur(60px);
-  opacity: 0.35;
+    radial-gradient(circle at 30% 40%, var(--mentee-glow) 0%, transparent 70%),
+    radial-gradient(circle at 66% 45%, var(--mentor-glow) 0%, transparent 70%);
+  filter: blur(100px);
+  opacity: 0.16;
 }
 
+/* Dark-mode override neutralized along with the token block above.
 @media (prefers-color-scheme: dark) {
   .concord-glow {
     opacity: 0.22;
   }
 }
+*/
 
 @media (prefers-reduced-motion: no-preference) {
   .concord-mark-fade {

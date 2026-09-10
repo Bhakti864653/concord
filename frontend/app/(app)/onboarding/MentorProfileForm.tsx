@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authFetch } from "@/lib/authFetch";
 import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
+import { buttonClasses } from "@/components/ui/Button";
 
 export default function MentorProfileForm() {
   const router = useRouter();
@@ -62,7 +63,7 @@ export default function MentorProfileForm() {
           placeholder="e.g. transitioning into product management"
           value={mentorsIn}
           onChange={(e) => setMentorsIn(e.target.value)}
-          className="rounded-md border border-line bg-paper px-3 py-2 focus:border-mentor focus:outline-none"
+          className="rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2 focus-ring focus:border-mentor"
         />
       </label>
 
@@ -74,7 +75,7 @@ export default function MentorProfileForm() {
           placeholder="How you got to where you are now"
           value={background}
           onChange={(e) => setBackground(e.target.value)}
-          className="rounded-md border border-line bg-paper px-3 py-2 focus:border-mentor focus:outline-none"
+          className="rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2 focus-ring focus:border-mentor"
         />
       </label>
 
@@ -106,7 +107,7 @@ export default function MentorProfileForm() {
           placeholder="Other (optional)"
           value={otherTagText}
           onChange={(e) => setOtherTagText(e.target.value)}
-          className="rounded-md border border-line bg-paper px-3 py-2 text-sm focus:border-mentor focus:outline-none"
+          className="rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2 text-sm focus-ring focus:border-mentor"
         />
       </fieldset>
 
@@ -119,7 +120,7 @@ export default function MentorProfileForm() {
           required
           value={availabilityCount}
           onChange={(e) => setAvailabilityCount(e.target.value)}
-          className="w-24 rounded-md border border-line bg-paper px-3 py-2 focus:border-mentor focus:outline-none"
+          className="w-24 rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2 focus-ring focus:border-mentor"
         />
       </label>
 
@@ -131,16 +132,12 @@ export default function MentorProfileForm() {
           placeholder="A little about you, for mentees deciding whether to reach out"
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          className="rounded-md border border-line bg-paper px-3 py-2 focus:border-mentor focus:outline-none"
+          className="rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2 focus-ring focus:border-mentor"
         />
       </label>
 
       {error && <p className="text-sm text-danger">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded-md bg-mentor px-3 py-2 font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
-      >
+      <button type="submit" disabled={loading} className={buttonClasses("mentor-primary")}>
         {loading ? "Saving..." : "Save profile"}
       </button>
     </form>
