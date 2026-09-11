@@ -52,6 +52,15 @@ export default function NotesList({
     setBody("");
   }
 
+  async function deleteNote(id: string) {
+    const { error } = await supabase.from("match_notes").delete().eq("id", id);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <form
@@ -92,7 +101,18 @@ export default function NotesList({
               <p className="text-xs font-bold tracking-tight text-mentee">
                 {n.author_id === currentUserId ? "You" : partnerLabel}
               </p>
-              <p className="text-xs text-muted">{new Date(n.created_at).toLocaleString()}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted">{new Date(n.created_at).toLocaleString()}</p>
+                {n.author_id === currentUserId && (
+                  <button
+                    onClick={() => deleteNote(n.id)}
+                    aria-label="Remove note"
+                    className="focus-ring inline-flex min-h-11 items-center rounded px-1 text-xs text-muted hover:text-danger"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
             </div>
             <p className="mt-1.5 text-sm text-ink">{n.body}</p>
           </div>
