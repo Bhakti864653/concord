@@ -4,7 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { matchReasons } from "@/lib/matchReasons";
 import { requireMatch } from "@/lib/matchAuth";
 import { CIRCUMSTANCE_TAGS } from "@/lib/tags";
-import { buttonClasses } from "@/components/ui/Button";
+import { computeNextAction } from "@/lib/nextAction";
+import { loadMatchProgress } from "@/lib/matchProgress";
+import { buildIcebreaker } from "@/lib/icebreaker";
+import MatchIdentity from "@/components/mentorship/MatchIdentity";
+import NextActionCard from "@/components/mentorship/NextActionCard";
+import MatchReasonChips, { type MatchReasonChip } from "@/components/mentorship/MatchReasonChips";
 import MatchExplanation from "./MatchExplanation";
 import MatchTabs from "./MatchTabs";
 
@@ -47,12 +52,30 @@ export default async function MatchPage({
     (isMentee ? counterpart.background_tags : ownProfile.background_tags) ?? [],
   );
 
-  const icebreaker =
-    reasons.sharedWords.length > 0
-      ? `You both mentioned "${reasons.sharedWords[0]}" - ask them about it.`
-      : reasons.sharedTags.length > 0
-        ? `You both share ${TAG_LABELS.get(reasons.sharedTags[0]) ?? reasons.sharedTags[0]} - that's a good place to start.`
-        : "Ask them what got them started on this path.";
+  const icebreaker = buildIcebreaker(reasons);
+
+  // Same state signals the dashboard uses for its own NextActionCard, kept
+  // in sync via the shared loader/computeNextAction() so the two screens
+  // never disagree about what to do next.
+  const progress = await loadMatchProgress(supabase, id, user.id, counterpartId);
+  const nextAction = computeNextAction(id, {
+    hasMessage: progress.hasMessage,
+    hasOverlap: progress.hasOverlap,
+    hasGoal: progress.goalsTotal > 0,
+    hasUpcomingSession: progress.hasUpcomingSession,
+    hasPendingCheckin: progress.hasPendingCheckin,
+  });
+
+  const ownTopic = isMentee ? ownProfile.seeking_guidance_on : ownProfile.mentors_in;
+  const counterpartTopic = isMentee ? counterpart.mentors_in : counterpart.seeking_guidance_on;
+
+  const reasonChips: MatchReasonChip[] = [
+    ...reasons.sharedWords.slice(0, 2).map((w) => ({ label: w, tone: "accord" as const })),
+    ...reasons.sharedTags.slice(0, 1).map((t) => ({
+      label: TAG_LABELS.get(t) ?? t,
+      tone: "mentor" as const,
+    })),
+  ].slice(0, 3);
 
   return (
     // The glow lives on this full-width, unclipped-at-the-content-edge
@@ -67,99 +90,93 @@ export default async function MatchPage({
         aria-hidden="true"
         className="concord-glow pointer-events-none fixed inset-0 -z-10"
       />
-      <div className="relative mx-auto flex w-full max-w-2xl flex-col gap-8">
-      <div className="relative">
-        <MatchTabs id={id} active="overview" />
-      </div>
-
-      {/* A compact trail of the same journey path from the dashboard, so
-          arriving here reads as reaching a milestone, not a card that
-          appeared out of nowhere. */}
-      <div className="match-reveal-in relative flex items-center gap-1" aria-hidden="true">
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-mentor text-paper">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-            <path d="M5 12l4 4L19 6" />
-          </svg>
-        </span>
-        <span className="h-0.5 w-8 bg-accord-glow" />
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-mentor text-paper">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-            <path d="M5 12l4 4L19 6" />
-          </svg>
-        </span>
-        <span className="h-0.5 w-8 bg-accord-glow" />
-        <svg width="34" height="26" viewBox="0 0 28 24">
-          <circle cx="10" cy="12" r="9" fill="var(--mentee-glow)" fillOpacity="0.7" />
-          <circle cx="18" cy="12" r="9" fill="var(--mentor-glow)" fillOpacity="0.9" />
-        </svg>
-        <span className="h-0.5 w-8 bg-line" />
-        <span className="h-7 w-7 rounded-full border-2 border-line" />
-        <span className="h-0.5 w-8 bg-line" />
-        <span className="h-7 w-7 rounded-full border-2 border-line" />
-      </div>
-
-      <div className="match-reveal-in relative flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <svg width="20" height="16" viewBox="0 0 28 24" aria-hidden="true">
-            <circle cx="10" cy="12" r="9" fill="var(--accord-glow)" fillOpacity="0.55" />
-            <circle cx="18" cy="12" r="9" fill="var(--accord-glow)" fillOpacity="0.85" />
-          </svg>
-          <p className="text-sm font-semibold text-accord">You&apos;ve been matched!</p>
+      <div className="relative mx-auto flex w-full max-w-2xl flex-col gap-6">
+        <div className="relative">
+          <MatchTabs id={id} active="overview" />
         </div>
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
-          {isMentee ? counterpart.mentors_in : counterpart.seeking_guidance_on}
-        </h1>
-      </div>
 
-      {/* Plain card, not the heavy accord-green fill this used to have -
-          "You've been matched!" above already carries the green signal;
-          painting the whole bio block green too read as overbearing for
-          what's just descriptive text. A thin counterpart-role-colored
-          left border gives it identity without the weight. */}
-      <section
-        className={`concord-lift match-reveal-in relative flex flex-col gap-3 rounded-2xl border-l-4 bg-paper-raised p-6 ${isMentee ? "border-mentor" : "border-mentee"}`}
-      >
-        <p className="text-sm text-ink">{counterpart.bio}</p>
+        {/* The signature moment: two paths (mentee/mentor) meeting in the
+            middle. Same circle-pair motif used everywhere else in the app
+            (JourneyPath's milestone node, the landing-page preview), just
+            given room to be the main event here instead of a small icon. */}
+        <section className="match-reveal-in concord-lift relative flex flex-col items-center gap-5 rounded-[28px] bg-paper-raised px-5 py-7 sm:px-8">
+          <div className="flex w-full flex-col items-center gap-4 sm:flex-row sm:justify-between sm:gap-8">
+            <MatchIdentity
+              role={userType}
+              roleLabel="You"
+              topic={ownTopic}
+              size="lg"
+              align="start"
+            />
+            <svg width="44" height="34" viewBox="0 0 28 24" aria-hidden="true" className="shrink-0">
+              <circle cx="10" cy="12" r="9" fill="var(--mentee-glow)" fillOpacity="0.75" />
+              <circle cx="18" cy="12" r="9" fill="var(--mentor-glow)" fillOpacity="0.9" />
+            </svg>
+            <MatchIdentity
+              role={isMentee ? "mentor" : "mentee"}
+              roleLabel={isMentee ? "Your mentor" : "Your mentee"}
+              topic={counterpartTopic}
+              size="lg"
+              align="end"
+            />
+          </div>
 
-        {!isMentee && (
-          <p className="text-xs text-ink/70">
-            Their background: {counterpart.background}
+          <div className="flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-accord text-paper"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <path d="M5 12l4 4L19 6" />
+              </svg>
+            </span>
+            <h1 className="font-display text-lg font-semibold tracking-tight text-ink">
+              You&apos;ve been matched!
+            </h1>
+          </div>
+
+          <MatchReasonChips reasons={reasonChips} />
+        </section>
+
+        {match.status === "ended" ? (
+          <p className="text-sm text-muted">
+            This match has ended. You&apos;ll be included in the next matching round.
           </p>
+        ) : (
+          <NextActionCard action={nextAction} />
         )}
 
-        {(reasons.sharedWords.length > 0 || reasons.sharedTags.length > 0) && (
-          <p className="text-xs text-ink/70">
-            You both mentioned{" "}
-            {reasons.sharedWords.slice(0, 4).join(", ") || "similar things"}
-            {reasons.sharedTags.length > 0 &&
-              ` and share ${reasons.sharedTags.map((t) => TAG_LABELS.get(t) ?? t).join(", ")}`}
-          </p>
-        )}
-      </section>
+        {/* Plain card, not the heavy accord-green fill this used to have -
+            "You've been matched!" above already carries the green signal;
+            painting the whole bio block green too read as overbearing for
+            what's just descriptive text. A thin counterpart-role-colored
+            left border gives it identity without the weight. */}
+        <section
+          className={`concord-lift relative flex flex-col gap-3 rounded-2xl border-l-4 bg-paper-raised p-6 ${isMentee ? "border-mentor" : "border-mentee"}`}
+        >
+          <p className="text-sm text-ink">{counterpart.bio}</p>
 
-      <section className="concord-lift relative flex flex-col gap-2 rounded-2xl border-l-4 border-mentee bg-paper-raised p-4">
-        <h2 className="text-sm font-medium text-muted">Icebreaker</h2>
-        <p className="text-sm text-ink">{icebreaker}</p>
-      </section>
+          {!isMentee && (
+            <p className="text-xs text-ink/70">
+              Their background: {counterpart.background}
+            </p>
+          )}
+        </section>
 
-      <div className="relative">
-        <MatchExplanation matchId={id} isMentee={isMentee} />
-      </div>
+        <section className="concord-lift relative flex flex-col gap-2 rounded-2xl border-l-4 border-mentee bg-paper-raised p-4">
+          <h2 className="text-sm font-medium text-muted">Icebreaker</h2>
+          <p className="text-sm text-ink">{icebreaker}</p>
+        </section>
 
-      {match.status === "ended" ? (
-        <p className="relative text-sm text-muted">
-          This match has ended. You&apos;ll be included in the next matching round.
-        </p>
-      ) : (
-        <div className="relative flex items-center gap-4">
-          <Link href={`/match/${id}/chat`} className={buttonClasses("primary")}>
-            Start chatting
-          </Link>
-          <Link href={`/match/${id}/safety`} className="focus-ring text-sm text-muted underline hover:text-ink">
+        <div className="relative">
+          <MatchExplanation matchId={id} isMentee={isMentee} />
+        </div>
+
+        {match.status !== "ended" && (
+          <Link href={`/match/${id}/safety`} className="focus-ring self-start text-sm text-muted underline hover:text-ink">
             More
           </Link>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

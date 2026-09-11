@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import { buttonClasses } from "@/components/ui/Button";
+import ContextualEmptyState from "@/components/mentorship/ContextualEmptyState";
 
 type Session = {
   id: string;
@@ -89,7 +90,11 @@ export default function SessionsList({
       </form>
 
       {sessions.length === 0 && (
-        <p className="text-sm text-muted">No sessions logged yet.</p>
+        <ContextualEmptyState
+          kind="session"
+          title="No sessions logged yet"
+          description="Log a date and time above once you've picked one."
+        />
       )}
 
       <div className="flex flex-col gap-3">

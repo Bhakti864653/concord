@@ -3,9 +3,19 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import NotificationBell from "@/components/NotificationBell";
 import { buildJourney } from "@/lib/journey";
+import { computeNextAction } from "@/lib/nextAction";
+import { loadMatchProgress } from "@/lib/matchProgress";
+import MatchIdentity from "@/components/mentorship/MatchIdentity";
+import NextActionCard from "@/components/mentorship/NextActionCard";
 import RoundControl from "./RoundControl";
 import JourneyPath from "./JourneyPath";
-import MatchExplanation from "../match/[id]/MatchExplanation";
+
+function greeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -83,28 +93,20 @@ export default async function DashboardPage() {
   const primaryMatch = matches[0] ?? null;
   const otherMatches = matches.slice(1);
 
-  let hasMessage = false;
-  let hasOverlap = false;
+  const progress = primaryMatch
+    ? await loadMatchProgress(supabase, primaryMatch.id, user.id, primaryMatch.counterpartId)
+    : null;
 
-  if (primaryMatch) {
-    const { data: messageRows } = await supabase
-      .from("messages")
-      .select("id")
-      .eq("match_id", primaryMatch.id)
-      .limit(1);
-    hasMessage = (messageRows ?? []).length > 0;
-
-    const [{ data: ownAvailability }, { data: partnerAvailability }] = await Promise.all([
-      supabase.from("availability").select("slots").eq("user_id", user.id).maybeSingle(),
-      supabase
-        .from("availability")
-        .select("slots")
-        .eq("user_id", primaryMatch.counterpartId)
-        .maybeSingle(),
-    ]);
-    const ownSlots = new Set(ownAvailability?.slots ?? []);
-    hasOverlap = (partnerAvailability?.slots ?? []).some((slot: string) => ownSlots.has(slot));
-  }
+  const nextAction =
+    primaryMatch && progress
+      ? computeNextAction(primaryMatch.id, {
+          hasMessage: progress.hasMessage,
+          hasOverlap: progress.hasOverlap,
+          hasGoal: progress.goalsTotal > 0,
+          hasUpcomingSession: progress.hasUpcomingSession,
+          hasPendingCheckin: progress.hasPendingCheckin,
+        })
+      : null;
 
   const isAdmin = user.email?.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
 
@@ -117,6 +119,15 @@ export default async function DashboardPage() {
   const roundStatus = currentRound?.status ?? "preferences_open";
   const isWaitlisted = preferencesLocked && !primaryMatch;
 
+  // Only shown on the no-match hero below, and only when there's actually
+  // something round-specific worth saying - "preferences_open" is the
+  // default steady state and isn't worth a headline of its own.
+  const roundHeadline: Record<string, string> = {
+    preferences_locked: "Preferences are locked - matching runs soon.",
+    matching_in_progress: "Matching is running right now.",
+    results_available: "Results are in for this round.",
+  };
+
   const journey = buildJourney({
     ownProfileSummary: isMentee ? ownProfile.seeking_guidance_on : ownProfile.mentors_in,
     preferencesLocked,
@@ -127,64 +138,138 @@ export default async function DashboardPage() {
         ? primaryMatch.profile.mentors_in
         : primaryMatch.profile.seeking_guidance_on
       : null,
-    hasMessage,
-    hasOverlap,
+    hasMessage: progress?.hasMessage ?? false,
+    hasOverlap: progress?.hasOverlap ?? false,
   });
 
-  const roundHeadline: Record<string, string> = {
-    preferences_open: primaryMatch
-      ? "Your match is set for this round."
-      : "Your suggested list is ready to review.",
-    preferences_locked: "Preferences are locked - matching runs soon.",
-    matching_in_progress: "Matching is running right now.",
-    results_available: "Results are in for this round.",
-  };
+  const ownTopic = isMentee ? ownProfile.seeking_guidance_on : ownProfile.mentors_in;
+  const counterpartTopic = primaryMatch
+    ? isMentee
+      ? primaryMatch.profile.mentors_in
+      : primaryMatch.profile.seeking_guidance_on
+    : null;
 
   return (
     <div className="mx-auto flex w-full max-w-[1220px] flex-col gap-6">
-      {/* One main status card: what's happening this round, and the one
-          obvious next action - merges what used to be a separate header
-          bar plus its own gradient card. */}
-      <div className="concord-lift relative overflow-hidden rounded-[22px] bg-gradient-to-br from-mentee-glow via-mentee to-mentee p-7 text-paper-raised">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-24 -top-12 h-64 w-64 rounded-full border-2 border-white/15"
-        />
-        <div className="relative flex items-center justify-between">
-          <p className="text-xs font-extrabold uppercase tracking-widest text-paper-raised/80">
-            Mentorship, thoughtfully matched
-          </p>
-          <NotificationBell userId={user.id} />
+      {/* Contextual heading - answers "what should I do today," not a
+          restatement of round status (that still lives just below, smaller,
+          only when there's actually something round-related to say). */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-medium text-muted">{greeting()}.</p>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+            {primaryMatch
+              ? "Here's where things stand with your match."
+              : preferencesLocked
+                ? "You're locked in for this round."
+                : "Let's get your preferences ranked."}
+          </h1>
         </div>
-        <div className="relative mt-4 flex items-center gap-2 text-sm font-bold">
-          <i aria-hidden="true" className="h-2 w-2 rounded-full bg-accord-glow" />
-          Round: {roundStatus.replaceAll("_", " ")}
-        </div>
-        <h2 className="relative mt-3 max-w-md text-[26px] font-bold leading-tight tracking-tight">
-          {roundHeadline[roundStatus]}
-        </h2>
-        <p className="relative mt-2 max-w-md text-white/85">
-          {primaryMatch
-            ? "Keep the conversation moving - shared goals and a session or two go a long way."
-            : "We found people who understand both where you want to go and where you're coming from."}
-        </p>
-        <Link
-          href={primaryMatch ? `/match/${primaryMatch.id}` : "/preferences"}
-          className="focus-ring relative mt-4 inline-block rounded-[var(--radius-control)] bg-paper-raised px-4 py-2.5 font-bold text-mentee"
-        >
-          {primaryMatch ? "Go to your match →" : "Review your ranking →"}
-        </Link>
+        <NotificationBell userId={user.id} />
       </div>
+
+      {primaryMatch && counterpartTopic && (
+        <div className="concord-lift flex flex-col gap-4 rounded-[22px] border border-line bg-paper-raised p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <MatchIdentity
+              role={isMentee ? "mentor" : "mentee"}
+              roleLabel={isMentee ? "Your mentor" : "Your mentee"}
+              topic={counterpartTopic}
+              size="md"
+            />
+            <Link
+              href={`/match/${primaryMatch.id}`}
+              className="focus-ring text-sm font-medium text-mentee underline"
+            >
+              View match →
+            </Link>
+          </div>
+
+          {nextAction && <NextActionCard action={nextAction} />}
+
+          {/* Upcoming session + goal progress, only when there's something
+              real to show - no placeholder/zero-state clutter here, that's
+              what Our Plan's own empty states are for. */}
+          {(progress?.nextSession || (progress && progress.goalsTotal > 0)) && (
+            <div className="flex flex-col gap-2 border-t border-line pt-4 text-sm text-ink sm:flex-row sm:gap-6">
+              {progress?.nextSession && (
+                <p className="flex items-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M3 10h18M7 3v4M17 3v4M5 6h14a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                  </svg>
+                  Next session:{" "}
+                  <span className="font-medium">
+                    {new Date(progress.nextSession.scheduled_for).toLocaleString(undefined, {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </span>
+                </p>
+              )}
+              {progress && progress.goalsTotal > 0 && (
+                <p className="flex items-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M12 2v6M12 22a9 9 0 100-18 9 9 0 000 18zM12 16a4 4 0 100-8 4 4 0 000 8z" />
+                  </svg>
+                  {progress.milestonesTotal > 0
+                    ? `${progress.milestonesDone} of ${progress.milestonesTotal} milestones done`
+                    : `${progress.goalsTotal} shared goal${progress.goalsTotal === 1 ? "" : "s"} set`}
+                </p>
+              )}
+              <Link
+                href={`/match/${primaryMatch.id}/journey`}
+                className="focus-ring text-sm font-medium text-mentee underline sm:ml-auto"
+              >
+                Our plan →
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!primaryMatch && (
+        <Link
+          href="/preferences"
+          className="focus-ring concord-lift relative overflow-hidden rounded-[22px] bg-gradient-to-br from-mentee-glow via-mentee to-mentee p-7 text-paper-raised"
+        >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-24 -top-12 h-64 w-64 rounded-full border-2 border-white/15"
+          />
+          {roundHeadline[roundStatus] && (
+            <p className="relative text-xs font-extrabold uppercase tracking-widest text-paper-raised/80">
+              {roundHeadline[roundStatus]}
+            </p>
+          )}
+          <p className="relative mt-1 max-w-md text-[22px] font-bold leading-tight tracking-tight">
+            {ownTopic}
+          </p>
+          <p className="relative mt-2 max-w-md text-white/85">
+            We found people who understand both where you want to go and where you&apos;re coming
+            from.
+          </p>
+          <span className="relative mt-4 inline-block rounded-[var(--radius-control)] bg-paper-raised px-4 py-2.5 font-bold text-mentee">
+            Review your ranking →
+          </span>
+        </Link>
+      )}
 
       {/* One compact journey display. RoundControl only ever renders its
           admin button for the one admin account, so this stays invisible
           to everyone else - it's not wrapped in its own card anymore. */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-bold text-muted">YOUR JOURNEY</p>
+          <h2 className="text-xs font-bold text-muted">YOUR JOURNEY</h2>
           {isAdmin && <RoundControl status={roundStatus} isAdmin={!!isAdmin} />}
         </div>
         <JourneyPath steps={journey} />
+        {/* A plain text link, not the big equal-weight card this used to be -
+            but still needed here: the sidebar's "Rounds & waitlist" link is
+            desktop-only, and MobileNav doesn't carry it either, so this is
+            the only way mobile users reach /rounds at all. */}
+        <Link href="/rounds" className="focus-ring self-start text-xs font-medium text-muted underline hover:text-ink">
+          Rounds &amp; how matching works →
+        </Link>
       </div>
 
       {isWaitlisted && (
@@ -193,30 +278,6 @@ export default async function DashboardPage() {
           used automatically once it runs.
         </p>
       )}
-
-      {/* At most 2 secondary cards. */}
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-        <Link
-          href="/rounds"
-          className="focus-ring concord-lift rounded-[18px] border border-line bg-paper-raised p-4"
-        >
-          <p className="font-semibold text-ink">Rounds &amp; how matching works</p>
-          <p className="mt-1 text-sm text-muted">
-            Where this round stands, and how the algorithm decides matches.
-          </p>
-        </Link>
-        {primaryMatch && (
-          <Link
-            href={`/match/${primaryMatch.id}/journey`}
-            className="focus-ring concord-lift rounded-[18px] border border-line bg-paper-raised p-4"
-          >
-            <p className="font-semibold text-ink">Our plan</p>
-            <p className="mt-1 text-sm text-muted">Availability, goals, sessions, and notes.</p>
-          </Link>
-        )}
-      </div>
-
-      {primaryMatch && <MatchExplanation matchId={primaryMatch.id} isMentee={isMentee} />}
 
       {otherMatches.length > 0 && (
         <section className="flex flex-col gap-3">

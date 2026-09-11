@@ -234,3 +234,23 @@ body {
     transform: scale(1) translateY(0);
   }
 }
+
+/* A milestone's checkmark, popping in the moment it's marked done (see
+   MilestonePath.tsx) - same restrained one-shot treatment as
+   match-reveal-in, not a looping/attention-grabbing animation. */
+@media (prefers-reduced-motion: no-preference) {
+  .milestone-pop {
+    animation: milestone-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+}
+
+@keyframes milestone-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

@@ -61,21 +61,59 @@ export default async function JourneyPage({
           .order("created_at", { ascending: true })
       : { data: [] };
 
+  const nextSession = (sessions ?? [])
+    .filter((s) => new Date(s.scheduled_for) >= new Date())
+    .sort((a, b) => new Date(a.scheduled_for).getTime() - new Date(b.scheduled_for).getTime())[0];
+
+  const milestonesTotal = (milestones ?? []).length;
+  const milestonesDone = (milestones ?? []).filter((m) => m.done).length;
+
   return (
     <div className="flex flex-col gap-4">
       <MatchTabs id={id} active="ourplan" />
       <div className="flex flex-col gap-1">
         <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
-          Our plan.
+          Your shared plan.
         </h1>
         <p className="text-sm text-muted">
           Availability, goals, sessions, and notes - everything you&apos;re building together, in one place.
         </p>
       </div>
 
+      {(nextSession || milestonesTotal > 0) && (
+        <div className="concord-lift flex flex-col gap-3 rounded-2xl border border-line bg-paper-raised p-4 sm:flex-row sm:items-center sm:gap-6">
+          {nextSession && (
+            <p className="flex items-center gap-2 text-sm text-ink">
+              <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-mentee-tint text-mentee">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 10h18M7 3v4M17 3v4M5 6h14a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                </svg>
+              </span>
+              Next session:{" "}
+              <span className="font-medium">
+                {new Date(nextSession.scheduled_for).toLocaleString(undefined, {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </span>
+            </p>
+          )}
+          {milestonesTotal > 0 && (
+            <p className="flex items-center gap-2 text-sm text-ink">
+              <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-accord-tint text-accord">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12l4 4L19 6" />
+                </svg>
+              </span>
+              {milestonesDone} of {milestonesTotal} milestones done
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <section className="flex flex-col gap-3">
-          <p className="text-xs font-bold text-muted">AVAILABILITY</p>
+          <h2 className="text-xs font-bold text-muted">AVAILABILITY</h2>
           <AvailabilityPicker
             userId={user.id}
             initialSlots={ownAvailability?.slots ?? []}
@@ -83,7 +121,7 @@ export default async function JourneyPage({
           />
         </section>
         <section className="flex flex-col gap-3">
-          <p className="text-xs font-bold text-muted">SHARED GOALS</p>
+          <h2 className="text-xs font-bold text-muted">SHARED GOALS</h2>
           <GoalsList
             matchId={id}
             currentUserId={user.id}
@@ -92,7 +130,7 @@ export default async function JourneyPage({
           />
         </section>
         <section className="flex flex-col gap-3">
-          <p className="text-xs font-bold text-muted">SESSIONS</p>
+          <h2 className="text-xs font-bold text-muted">SESSIONS</h2>
           <SessionsList
             matchId={id}
             currentUserId={user.id}
@@ -104,7 +142,7 @@ export default async function JourneyPage({
           </Link>
         </section>
         <section className="flex flex-col gap-3">
-          <p className="text-xs font-bold text-muted">NOTES</p>
+          <h2 className="text-xs font-bold text-muted">NOTES</h2>
           <NotesList
             matchId={id}
             currentUserId={user.id}

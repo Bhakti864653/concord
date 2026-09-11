@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import { buttonClasses } from "@/components/ui/Button";
+import MilestonePath from "@/components/mentorship/MilestonePath";
+import ContextualEmptyState from "@/components/mentorship/ContextualEmptyState";
 
 type Goal = {
   id: string;
@@ -152,7 +154,11 @@ export default function GoalsList({
       )}
 
       {goals.length === 0 && (
-        <p className="text-sm text-muted">No shared goals yet - add one above to get started.</p>
+        <ContextualEmptyState
+          kind="goal"
+          title="No shared goals yet"
+          description="Add one above to give this mentorship a clear focus."
+        />
       )}
 
       <div className="flex flex-col gap-3">
@@ -210,27 +216,11 @@ function GoalCard({
         </p>
       )}
 
-      <div className="flex flex-col gap-1.5">
-        {milestones.map((m) => (
-          <div key={m.id} className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={m.done}
-              onChange={(e) => onToggleMilestone(m.id, e.target.checked)}
-              className="h-4 w-4 accent-ink"
-            />
-            <span className={`flex-1 text-sm ${m.done ? "text-muted line-through" : "text-ink"}`}>
-              {m.title}
-            </span>
-            <button
-              onClick={() => onDeleteMilestone(m.id)}
-              className="text-xs text-muted hover:text-danger"
-            >
-              &times;
-            </button>
-          </div>
-        ))}
-      </div>
+      <MilestonePath
+        milestones={milestones}
+        onToggle={onToggleMilestone}
+        onDelete={onDeleteMilestone}
+      />
 
       <form
         onSubmit={(e) => {

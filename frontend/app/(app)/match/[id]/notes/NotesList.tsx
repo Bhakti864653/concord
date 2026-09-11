@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { buttonClasses } from "@/components/ui/Button";
+import ContextualEmptyState from "@/components/mentorship/ContextualEmptyState";
 
 type Note = {
   id: string;
@@ -76,9 +77,11 @@ export default function NotesList({
 
       <div className="flex flex-col gap-3">
         {notes.length === 0 && (
-          <p className="rounded-[var(--radius-card)] border border-dashed border-line p-5 text-center text-sm text-muted">
-            No notes yet - the first one will show up here.
-          </p>
+          <ContextualEmptyState
+            kind="note"
+            title="No notes yet"
+            description="The first one will show up here."
+          />
         )}
         {notes.map((n) => (
           <div

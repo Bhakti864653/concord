@@ -37,7 +37,7 @@ export default function MatchTabs({
             key={tab.key}
             href={tab.href(id)}
             aria-current={isActive ? "page" : undefined}
-            className={`focus-ring flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2 text-sm font-medium ${
+            className={`focus-ring flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2 text-sm font-medium ${
               isActive ? "border-b-2 border-ink text-ink" : "text-muted hover:text-ink"
             }`}
           >

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { authFetch } from "@/lib/authFetch";
+import Badge from "@/components/ui/Badge";
 
 type Explanation = {
   shared_words: string[];
@@ -55,17 +56,22 @@ export default function MatchExplanation({
   return (
     <details className="concord-lift group relative rounded-[var(--radius-card)] border border-line bg-paper-raised p-4">
       <summary className="focus-ring cursor-pointer rounded-md text-sm font-medium text-ink">
-        Why this match?
+        See full explanation
       </summary>
-      <div className="mt-3 flex flex-col gap-2 text-sm text-ink">
+      <div className="mt-3 flex flex-col gap-3 text-sm text-ink">
         {(data.shared_words.length > 0 || data.shared_tags.length > 0) && (
-          <p>
-            You both mentioned{" "}
-            {data.shared_words.length > 0 ? data.shared_words.slice(0, 5).join(", ") : "similar things"}
-            {data.shared_tags.length > 0 &&
-              ` and share ${data.shared_tags.map((t) => TAG_LABELS[t] ?? t).join(", ")}`}
-            .
-          </p>
+          <ul className="flex flex-wrap gap-2" aria-label="Shared interests and background">
+            {data.shared_words.slice(0, 5).map((w) => (
+              <li key={w}>
+                <Badge tone="accord">{w}</Badge>
+              </li>
+            ))}
+            {data.shared_tags.map((t) => (
+              <li key={t}>
+                <Badge tone="mentor">{TAG_LABELS[t] ?? t}</Badge>
+              </li>
+            ))}
+          </ul>
         )}
         {ownRank !== null && (
           <p>
@@ -77,6 +83,15 @@ export default function MatchExplanation({
           {isMentee
             ? `Your mentor had capacity for ${data.mentor_capacity} mentee${data.mentor_capacity === 1 ? "" : "s"} and is currently matched with ${data.mentor_matched_count}.`
             : `You had capacity for ${data.mentor_capacity} mentee${data.mentor_capacity === 1 ? "" : "s"} and are currently matched with ${data.mentor_matched_count}.`}
+        </p>
+        <p className="border-t border-line pt-3 text-xs text-muted">
+          Concord uses stable matching: everyone ranks who they&apos;d most want to work with, and
+          the algorithm pairs people up so no two people would both rather be matched with each
+          other than with who they ended up with. It&apos;s a rules-based algorithm, not AI -{" "}
+          <a href="/how-it-works" className="focus-ring underline hover:text-ink">
+            see exactly how it works
+          </a>
+          .
         </p>
       </div>
     </details>
