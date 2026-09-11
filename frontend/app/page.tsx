@@ -2,9 +2,11 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import { buttonClasses } from "@/components/ui/Button";
 import TryDemoButton from "@/components/TryDemoButton";
+import PageTransition from "@/components/PageTransition";
 
 export default function Home() {
   return (
+    <PageTransition>
     <main className="relative flex min-h-screen flex-1 items-center overflow-hidden px-6 py-10 sm:px-12 sm:py-16">
       <div
         aria-hidden="true"
@@ -58,6 +60,7 @@ export default function Home() {
         <MatchPreview />
       </div>
     </main>
+    </PageTransition>
   );
 }
 

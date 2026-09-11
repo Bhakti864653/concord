@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import Card from "@/components/ui/Card";
+import PageTransition from "@/components/PageTransition";
 
 const SECTIONS = [
   {
@@ -27,6 +28,7 @@ const SECTIONS = [
 
 export default function CommunityGuidelinesPage() {
   return (
+    <PageTransition>
     <main className="relative w-full overflow-hidden p-6">
       <div
         aria-hidden="true"
@@ -55,5 +57,6 @@ export default function CommunityGuidelinesPage() {
       </div>
       </div>
     </main>
+    </PageTransition>
   );
 }

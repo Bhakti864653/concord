@@ -2,6 +2,7 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import Card from "@/components/ui/Card";
 import Sandbox from "./Sandbox";
+import PageTransition from "@/components/PageTransition";
 
 const STEPS = [
   {
@@ -24,6 +25,7 @@ const STEPS = [
 
 export default function HowItWorksPage() {
   return (
+    <PageTransition>
     <main className="relative w-full overflow-hidden p-6">
       <div
         aria-hidden="true"
@@ -72,5 +74,6 @@ export default function HowItWorksPage() {
       <Sandbox />
       </div>
     </main>
+    </PageTransition>
   );
 }

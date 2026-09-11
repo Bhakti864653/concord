@@ -7,6 +7,7 @@ import Logo from "@/components/Logo";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import PageTransition from "@/components/PageTransition";
 
 type UserType = "mentee" | "mentor";
 
@@ -47,6 +48,7 @@ export default function SignupPage() {
   }
 
   return (
+    <PageTransition>
     <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden p-6">
       <div
         aria-hidden="true"
@@ -130,5 +132,6 @@ export default function SignupPage() {
       </Card>
       </div>
     </main>
+    </PageTransition>
   );
 }

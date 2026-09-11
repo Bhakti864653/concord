@@ -311,3 +311,40 @@ body {
     opacity: 0;
   }
 }
+
+/* A brief entrance on every route change (see PageTransition.tsx), so
+   navigating never reads as an abrupt snap - deliberately quick and small
+   (12px, 0.25s) since this fires on every single page, not a one-time
+   moment like match-reveal-in above. */
+@media (prefers-reduced-motion: no-preference) {
+  .page-enter {
+    animation: page-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Standardizes hover/focus transitions across every interactive element
+   that already carries .focus-ring (buttons, links, inputs, nav items) -
+   the same fast ease-out curve serval.com uses on its own nav/buttons,
+   applied once here instead of each component repeating its own
+   transition-* utility (or, in a few places, forgetting one entirely and
+   snapping instead of easing). An element's own transition-* utility (if
+   more specific) still wins, so this only fills gaps rather than fighting
+   anything already tuned. */
+.focus-ring {
+  transition:
+    color 0.15s cubic-bezier(0, 0, 0.2, 1),
+    background-color 0.15s cubic-bezier(0, 0, 0.2, 1),
+    border-color 0.15s cubic-bezier(0, 0, 0.2, 1),
+    opacity 0.15s cubic-bezier(0, 0, 0.2, 1);
+}

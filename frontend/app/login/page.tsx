@@ -7,6 +7,7 @@ import Logo from "@/components/Logo";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import PageTransition from "@/components/PageTransition";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -40,6 +41,7 @@ export default function LoginPage() {
     // Glow on a full-viewport-width wrapper, not the narrow max-w-sm column
     // below - clipping it to that column's own bounds (same element having
     // both overflow-hidden and max-w-sm) gave it a hard rectangular edge.
+    <PageTransition>
     <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden p-6">
       <div
         aria-hidden="true"
@@ -81,5 +83,6 @@ export default function LoginPage() {
       </Card>
       </div>
     </main>
+    </PageTransition>
   );
 }

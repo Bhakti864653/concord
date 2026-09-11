@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
+import PageTransition from "@/components/PageTransition";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -44,7 +45,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Extra top clearance on mobile only, clearing the fixed
           GlobalThemeToggle that renders there (desktop has it in the
           sidebar, not floating over content). */}
-      <main className="min-w-0 flex-1 px-4 pb-24 pt-14 sm:px-8 sm:pb-10 sm:pt-4">{children}</main>
+      <main className="min-w-0 flex-1 px-4 pb-24 pt-14 sm:px-8 sm:pb-10 sm:pt-4">
+        <PageTransition>{children}</PageTransition>
+      </main>
       <MobileNav primaryMatchId={primaryMatchId} />
     </div>
   );
