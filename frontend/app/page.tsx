@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { buttonClasses } from "@/components/ui/Button";
+import TryDemoButton from "@/components/TryDemoButton";
 
 export default function Home() {
   return (
@@ -28,13 +29,14 @@ export default function Home() {
               holds up - not a popularity contest, not a coin flip.
             </p>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap items-start gap-3">
               <Link href="/signup" className={buttonClasses("primary")}>
                 Sign up
               </Link>
               <Link href="/login" className={buttonClasses("secondary")}>
                 Log in
               </Link>
+              <TryDemoButton />
             </div>
 
             <HowItWorks />

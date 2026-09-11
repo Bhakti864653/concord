@@ -1,0 +1,15 @@
+name: Clean up demo accounts
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call demo cleanup endpoint
+        run: |
+          curl --fail -X POST "https://concord-api-8645.onrender.com/demo/cleanup" \
+            -H "Authorization: Bearer ${{ secrets.DEMO_CLEANUP_SECRET }}"

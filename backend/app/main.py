@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .admin import router as admin_router
+from .demo import router as demo_router
 from .match_explanation import router as match_explanation_router
 from .matching import router as matching_router
 from .profiles import router as profiles_router
@@ -55,6 +56,7 @@ app.include_router(match_explanation_router)
 app.include_router(reports_router)
 app.include_router(rounds_router)
 app.include_router(admin_router)
+app.include_router(demo_router)
 
 
 @app.get("/health")
