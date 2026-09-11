@@ -80,7 +80,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
       <button
         type="button"
         onClick={handleToggle}
-        className="focus-ring relative rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-sm font-medium text-ink"
+        className="focus-ring relative min-h-11 rounded-[var(--radius-control)] border border-line px-3 py-1.5 text-sm font-medium text-ink"
       >
         Notifications
         {unreadIds.length > 0 && (

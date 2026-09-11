@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Input from "@/components/ui/Input";
 import { buttonClasses } from "@/components/ui/Button";
+import SuccessPulse from "@/components/mentorship/SuccessPulse";
 import ReportButton from "../ReportButton";
 
 type Message = {
@@ -25,6 +26,7 @@ export default function Chat({
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [firstMessagePulse, setFirstMessagePulse] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,6 +82,8 @@ export default function Chat({
     const trimmed = body.trim();
     if (!trimmed) return;
 
+    const isFirstMessage = messages.length === 0;
+
     setSending(true);
     setError(null);
     const { error } = await supabase.from("messages").insert({
@@ -94,6 +98,7 @@ export default function Chat({
       return;
     }
     setBody("");
+    if (isFirstMessage) setFirstMessagePulse((n) => n + 1);
   }
 
   return (
@@ -132,6 +137,7 @@ export default function Chat({
       </div>
 
       {error && <p className="text-sm text-danger">{error}</p>}
+      <SuccessPulse message="First message sent!" trigger={firstMessagePulse} />
 
       <form onSubmit={handleSend} className="flex items-end gap-2">
         <div className="flex-1">

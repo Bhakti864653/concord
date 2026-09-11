@@ -7,6 +7,7 @@ import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import { buttonClasses } from "@/components/ui/Button";
 import ContextualEmptyState from "@/components/mentorship/ContextualEmptyState";
+import SuccessPulse from "@/components/mentorship/SuccessPulse";
 
 type Session = {
   id: string;
@@ -40,6 +41,7 @@ export default function SessionsList({
   const [checkins] = useState<Checkin[]>(initialCheckins);
   const [when, setWhen] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loggedPulse, setLoggedPulse] = useState(0);
 
   async function addSession(e: React.FormEvent) {
     e.preventDefault();
@@ -59,6 +61,7 @@ export default function SessionsList({
     }
     setSessions((prev) => [data as Session, ...prev]);
     setWhen("");
+    setLoggedPulse((n) => n + 1);
   }
 
   async function deleteSession(id: string) {
@@ -89,6 +92,8 @@ export default function SessionsList({
         </button>
       </form>
 
+      <SuccessPulse message="Session logged" trigger={loggedPulse} />
+
       {sessions.length === 0 && (
         <ContextualEmptyState
           kind="session"
@@ -111,7 +116,7 @@ export default function SessionsList({
                 <p className="font-medium text-ink">{formattedTime}</p>
                 <button
                   onClick={() => deleteSession(s.id)}
-                  className="focus-ring rounded text-xs text-muted hover:text-danger"
+                  className="focus-ring inline-flex min-h-11 items-center rounded px-1 text-xs text-muted hover:text-danger"
                 >
                   Remove
                 </button>
@@ -123,7 +128,7 @@ export default function SessionsList({
               {isPast && !ownCheckin && (
                 <Link
                   href={`/match/${matchId}/checkin`}
-                  className="focus-ring text-xs font-medium text-mentee underline"
+                  className="focus-ring inline-flex min-h-11 items-center text-xs font-medium text-mentee underline"
                 >
                   Check in on this session →
                 </Link>

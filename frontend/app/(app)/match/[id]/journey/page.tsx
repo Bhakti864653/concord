@@ -1,11 +1,21 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireMatch } from "@/lib/matchAuth";
+import MentorshipProgress from "@/components/mentorship/MentorshipProgress";
 import MatchTabs from "../MatchTabs";
 import AvailabilityPicker from "../availability/AvailabilityPicker";
 import GoalsList from "../goals/GoalsList";
 import SessionsList from "../sessions/SessionsList";
 import NotesList from "../notes/NotesList";
+
+// A plain "YYYY-MM-DD" goal deadline has no time/zone info - new Date(str)
+// parses that as UTC midnight, which .toLocaleDateString() can then render
+// as the *previous* local day west of UTC. Parsing the parts directly into
+// a local-time Date avoids that off-by-one.
+function parseLocalDate(dateOnly: string): Date {
+  const [year, month, day] = dateOnly.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
 
 export default async function JourneyPage({
   params,
@@ -68,6 +78,11 @@ export default async function JourneyPage({
   const milestonesTotal = (milestones ?? []).length;
   const milestonesDone = (milestones ?? []).filter((m) => m.done).length;
 
+  const todayStart = new Date(new Date().toDateString());
+  const nextDeadlineGoal = (goals ?? [])
+    .filter((g) => g.deadline && parseLocalDate(g.deadline) >= todayStart)
+    .sort((a, b) => parseLocalDate(a.deadline!).getTime() - parseLocalDate(b.deadline!).getTime())[0];
+
   return (
     <div className="flex flex-col gap-4">
       <MatchTabs id={id} active="ourplan" />
@@ -80,8 +95,8 @@ export default async function JourneyPage({
         </p>
       </div>
 
-      {(nextSession || milestonesTotal > 0) && (
-        <div className="concord-lift flex flex-col gap-3 rounded-2xl border border-line bg-paper-raised p-4 sm:flex-row sm:items-center sm:gap-6">
+      {(nextSession || milestonesTotal > 0 || nextDeadlineGoal) && (
+        <div className="concord-lift flex flex-col gap-3 rounded-2xl border border-line bg-paper-raised p-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
           {nextSession && (
             <p className="flex items-center gap-2 text-sm text-ink">
               <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-mentee-tint text-mentee">
@@ -98,14 +113,18 @@ export default async function JourneyPage({
               </span>
             </p>
           )}
-          {milestonesTotal > 0 && (
+          <MentorshipProgress goalsTotal={(goals ?? []).length} milestonesTotal={milestonesTotal} milestonesDone={milestonesDone} />
+          {nextDeadlineGoal && (
             <p className="flex items-center gap-2 text-sm text-ink">
-              <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-accord-tint text-accord">
+              <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-mentor-tint text-mentor">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12l4 4L19 6" />
+                  <path d="M12 8v4l3 3M12 22a9 9 0 100-18 9 9 0 000 18z" />
                 </svg>
               </span>
-              {milestonesDone} of {milestonesTotal} milestones done
+              Next deadline:{" "}
+              <span className="font-medium">
+                {nextDeadlineGoal.title} ({parseLocalDate(nextDeadlineGoal.deadline!).toLocaleDateString(undefined, { month: "short", day: "numeric" })})
+              </span>
             </p>
           )}
         </div>
@@ -137,7 +156,7 @@ export default async function JourneyPage({
             initialSessions={sessions ?? []}
             initialCheckins={checkins ?? []}
           />
-          <Link href={`/match/${id}/checkin`} className="focus-ring text-sm font-medium text-mentee underline">
+          <Link href={`/match/${id}/checkin`} className="focus-ring inline-flex min-h-11 items-center text-sm font-medium text-mentee underline">
             Go to your pending check-ins →
           </Link>
         </section>

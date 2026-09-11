@@ -7,6 +7,8 @@ import { computeNextAction } from "@/lib/nextAction";
 import { loadMatchProgress } from "@/lib/matchProgress";
 import MatchIdentity from "@/components/mentorship/MatchIdentity";
 import NextActionCard from "@/components/mentorship/NextActionCard";
+import MentorshipProgress from "@/components/mentorship/MentorshipProgress";
+import { relativeDay } from "@/lib/relativeTime";
 import RoundControl from "./RoundControl";
 import JourneyPath from "./JourneyPath";
 
@@ -108,6 +110,45 @@ export default async function DashboardPage() {
         })
       : null;
 
+  // "Recent meaningful activity": the newer of the match's last message or
+  // last note, both of which carry real timestamps - nothing fabricated,
+  // and nothing shown when there's genuinely no activity yet.
+  let recentActivity: { label: string; when: string } | null = null;
+  if (primaryMatch) {
+    const [{ data: lastMessage }, { data: lastNote }] = await Promise.all([
+      supabase
+        .from("messages")
+        .select("sender_id, created_at")
+        .eq("match_id", primaryMatch.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("match_notes")
+        .select("author_id, created_at")
+        .eq("match_id", primaryMatch.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    const candidates = [
+      lastMessage && {
+        at: lastMessage.created_at,
+        label: lastMessage.sender_id === user.id ? "You sent a message" : "New message from your match",
+      },
+      lastNote && {
+        at: lastNote.created_at,
+        label: lastNote.author_id === user.id ? "You added a note" : "Your match added a note",
+      },
+    ].filter((c): c is { at: string; label: string } => !!c);
+
+    const latest = candidates.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())[0];
+    if (latest) {
+      recentActivity = { label: latest.label, when: relativeDay(latest.at) };
+    }
+  }
+
   const isAdmin = user.email?.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
 
   const { data: currentRound } = await supabase
@@ -179,7 +220,7 @@ export default async function DashboardPage() {
             />
             <Link
               href={`/match/${primaryMatch.id}`}
-              className="focus-ring text-sm font-medium text-mentee underline"
+              className="focus-ring inline-flex min-h-11 items-center text-sm font-medium text-mentee underline"
             >
               View match →
             </Link>
@@ -206,23 +247,21 @@ export default async function DashboardPage() {
                   </span>
                 </p>
               )}
-              {progress && progress.goalsTotal > 0 && (
-                <p className="flex items-center gap-2">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <path d="M12 2v6M12 22a9 9 0 100-18 9 9 0 000 18zM12 16a4 4 0 100-8 4 4 0 000 8z" />
-                  </svg>
-                  {progress.milestonesTotal > 0
-                    ? `${progress.milestonesDone} of ${progress.milestonesTotal} milestones done`
-                    : `${progress.goalsTotal} shared goal${progress.goalsTotal === 1 ? "" : "s"} set`}
-                </p>
-              )}
+              {progress && <MentorshipProgress goalsTotal={progress.goalsTotal} milestonesTotal={progress.milestonesTotal} milestonesDone={progress.milestonesDone} />}
               <Link
                 href={`/match/${primaryMatch.id}/journey`}
-                className="focus-ring text-sm font-medium text-mentee underline sm:ml-auto"
+                className="focus-ring inline-flex min-h-11 items-center text-sm font-medium text-mentee underline sm:ml-auto"
               >
                 Our plan →
               </Link>
             </div>
+          )}
+
+          {recentActivity && (
+            <p className="flex items-center gap-2 border-t border-line pt-3 text-xs text-muted">
+              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accord" />
+              {recentActivity.label} · {recentActivity.when}
+            </p>
           )}
         </div>
       )}
@@ -267,7 +306,7 @@ export default async function DashboardPage() {
             but still needed here: the sidebar's "Rounds & waitlist" link is
             desktop-only, and MobileNav doesn't carry it either, so this is
             the only way mobile users reach /rounds at all. */}
-        <Link href="/rounds" className="focus-ring self-start text-xs font-medium text-muted underline hover:text-ink">
+        <Link href="/rounds" className="focus-ring inline-flex min-h-11 items-center self-start text-xs font-medium text-muted underline hover:text-ink">
           Rounds &amp; how matching works →
         </Link>
       </div>

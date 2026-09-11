@@ -21,18 +21,23 @@ export default function MatchIdentity({
   size?: "sm" | "md" | "lg";
   align?: "start" | "end";
 }) {
-  // Below sm, always a centered vertical stack regardless of `align` - side
-  // by side with a reversed/right-aligned "end" variant only has room once
-  // the hero itself goes side-by-side too (see match/[id]/page.tsx's
-  // flex-col sm:flex-row on the row that holds both identities).
+  // Stays a centered vertical stack up through `lg`, not just below `sm` -
+  // the desktop sidebar (240px) only exists from `sm` up, so at tablet
+  // widths (e.g. 768px viewport) the *content* column is actually narrower
+  // than many phones even though the viewport itself has cleared `sm`.
+  // `lg` (1024px) is the first breakpoint wide enough to have real room
+  // left over after the sidebar. Side by side with a reversed/right-aligned
+  // "end" variant only has room once the hero itself goes side-by-side too
+  // (see match/[id]/page.tsx's flex-col lg:flex-row on the row that holds
+  // both identities).
   return (
     <div
-      className={`flex flex-col items-center gap-2 text-center sm:min-w-0 sm:flex-1 sm:flex-row sm:items-center sm:gap-3 sm:text-left ${
-        align === "end" ? "sm:flex-row-reverse sm:text-right" : ""
+      className={`flex flex-col items-center gap-2 text-center lg:min-w-0 lg:flex-1 lg:flex-row lg:items-center lg:gap-3 lg:text-left ${
+        align === "end" ? "lg:flex-row-reverse lg:text-right" : ""
       }`}
     >
       <InitialAvatar label={topic} role={role} size={size} />
-      <div className="flex min-w-0 max-w-[160px] flex-col sm:max-w-none">
+      <div className="flex min-w-0 max-w-[160px] flex-col lg:max-w-none">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">{roleLabel}</p>
         <p className="truncate font-display text-base font-semibold text-ink">{topic}</p>
       </div>

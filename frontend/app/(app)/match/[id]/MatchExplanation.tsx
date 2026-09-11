@@ -55,7 +55,7 @@ export default function MatchExplanation({
 
   return (
     <details className="concord-lift group relative rounded-[var(--radius-card)] border border-line bg-paper-raised p-4">
-      <summary className="focus-ring cursor-pointer rounded-md text-sm font-medium text-ink">
+      <summary className="focus-ring flex min-h-11 cursor-pointer items-center rounded-md text-sm font-medium text-ink">
         See full explanation
       </summary>
       <div className="mt-3 flex flex-col gap-3 text-sm text-ink">
@@ -73,17 +73,23 @@ export default function MatchExplanation({
             ))}
           </ul>
         )}
-        {ownRank !== null && (
-          <p>
-            You ranked them #{ownRank} on your preference list
-            {partnerRank !== null && `, and they ranked you #${partnerRank} on theirs`}.
-          </p>
-        )}
-        <p>
-          {isMentee
-            ? `Your mentor had capacity for ${data.mentor_capacity} mentee${data.mentor_capacity === 1 ? "" : "s"} and is currently matched with ${data.mentor_matched_count}.`
-            : `You had capacity for ${data.mentor_capacity} mentee${data.mentor_capacity === 1 ? "" : "s"} and are currently matched with ${data.mentor_matched_count}.`}
-        </p>
+        <ul className="flex flex-wrap gap-2" aria-label="Ranking and capacity">
+          {ownRank !== null && (
+            <li>
+              <Badge tone="neutral">You ranked them #{ownRank}</Badge>
+            </li>
+          )}
+          {partnerRank !== null && (
+            <li>
+              <Badge tone="neutral">They ranked you #{partnerRank}</Badge>
+            </li>
+          )}
+          <li>
+            <Badge tone="neutral">
+              {isMentee ? "Mentor" : "Your"} capacity {data.mentor_matched_count}/{data.mentor_capacity}
+            </Badge>
+          </li>
+        </ul>
         <p className="border-t border-line pt-3 text-xs text-muted">
           Concord uses stable matching: everyone ranks who they&apos;d most want to work with, and
           the algorithm pairs people up so no two people would both rather be matched with each

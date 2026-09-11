@@ -254,3 +254,60 @@ body {
     transform: scale(1);
   }
 }
+
+/* The two circles on the match hero, starting apart and settling into their
+   final overlapping position - the "converging" moment itself, on top of
+   match-reveal-in's fade/scale on the section around them. */
+@media (prefers-reduced-motion: no-preference) {
+  .converge-left {
+    animation: converge-left 0.7s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .converge-right {
+    animation: converge-right 0.7s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes converge-left {
+  from {
+    transform: translateX(-14px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes converge-right {
+  from {
+    transform: translateX(14px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* A brief inline confirmation after an important action (first message
+   sent, goal created, session logged) - fades in, holds, fades out, then
+   SuccessPulse.tsx unmounts it on the animation's end event. Deliberately
+   NOT gated behind prefers-reduced-motion like the transform-based
+   animations above: it's a pure opacity fade (no translate/scale/parallax),
+   the category most reduced-motion guidance treats as safe, and gating it
+   off would leave the message stuck on screen forever for those users
+   since nothing else would trigger it to unmount. */
+.success-pulse {
+  animation: success-pulse 2.2s ease-in-out both;
+}
+
+@keyframes success-pulse {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

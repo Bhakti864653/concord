@@ -7,6 +7,7 @@ import Input from "@/components/ui/Input";
 import { buttonClasses } from "@/components/ui/Button";
 import MilestonePath from "@/components/mentorship/MilestonePath";
 import ContextualEmptyState from "@/components/mentorship/ContextualEmptyState";
+import SuccessPulse from "@/components/mentorship/SuccessPulse";
 
 type Goal = {
   id: string;
@@ -44,6 +45,7 @@ export default function GoalsList({
   const [newTitle, setNewTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [addedPulse, setAddedPulse] = useState(0);
 
   async function addGoal(e: React.FormEvent) {
     e.preventDefault();
@@ -65,6 +67,7 @@ export default function GoalsList({
     }
     setGoals((prev) => [...prev, data as Goal]);
     setNewTitle("");
+    setAddedPulse((n) => n + 1);
   }
 
   async function updateGoal(id: string, patch: Partial<Pick<Goal, "deadline" | "notes">>) {
@@ -153,6 +156,8 @@ export default function GoalsList({
         <p className="text-xs text-muted">You have the max of {MAX_GOALS} shared goals.</p>
       )}
 
+      <SuccessPulse message="Goal added" trigger={addedPulse} />
+
       {goals.length === 0 && (
         <ContextualEmptyState
           kind="goal"
@@ -205,7 +210,7 @@ function GoalCard({
     <Card padding="sm" className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-medium text-ink">{goal.title}</h3>
-        <button onClick={onDelete} className="focus-ring rounded text-xs text-muted hover:text-danger">
+        <button onClick={onDelete} className="focus-ring inline-flex min-h-11 items-center rounded px-1 text-xs text-muted hover:text-danger">
           Remove
         </button>
       </div>

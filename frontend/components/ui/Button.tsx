@@ -30,7 +30,7 @@ export function buttonClasses(
   className = "",
 ) {
   return [
-    "focus-ring inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] transition-opacity transition-colors disabled:opacity-50 disabled:pointer-events-none",
+    "focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] transition-opacity transition-colors disabled:opacity-50 disabled:pointer-events-none",
     VARIANT_CLASSES[variant],
     SIZE_CLASSES[size],
     className,

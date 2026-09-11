@@ -100,7 +100,7 @@ export default async function MatchPage({
             (JourneyPath's milestone node, the landing-page preview), just
             given room to be the main event here instead of a small icon. */}
         <section className="match-reveal-in concord-lift relative flex flex-col items-center gap-5 rounded-[28px] bg-paper-raised px-5 py-7 sm:px-8">
-          <div className="flex w-full flex-col items-center gap-4 sm:flex-row sm:justify-between sm:gap-8">
+          <div className="flex w-full flex-col items-center gap-4 lg:flex-row lg:justify-between lg:gap-8">
             <MatchIdentity
               role={userType}
               roleLabel="You"
@@ -109,8 +109,8 @@ export default async function MatchPage({
               align="start"
             />
             <svg width="44" height="34" viewBox="0 0 28 24" aria-hidden="true" className="shrink-0">
-              <circle cx="10" cy="12" r="9" fill="var(--mentee-glow)" fillOpacity="0.75" />
-              <circle cx="18" cy="12" r="9" fill="var(--mentor-glow)" fillOpacity="0.9" />
+              <circle className="converge-left" cx="10" cy="12" r="9" fill="var(--mentee-glow)" fillOpacity="0.75" />
+              <circle className="converge-right" cx="18" cy="12" r="9" fill="var(--mentor-glow)" fillOpacity="0.9" />
             </svg>
             <MatchIdentity
               role={isMentee ? "mentor" : "mentee"}
