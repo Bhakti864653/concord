@@ -24,7 +24,12 @@ export default function MatchTabs({
   active: (typeof TABS)[number]["key"];
 }) {
   return (
-    <nav className="flex flex-wrap gap-1 border-b border-line">
+    // flex-nowrap + overflow-x-auto instead of the old flex-wrap: on narrow
+    // screens the 5 tabs scroll horizontally in one row rather than
+    // wrapping to a second line. The px-1/-mx-1 pair gives the focus-ring
+    // outline room so it isn't clipped by the scroll container on the
+    // first/last tab.
+    <nav className="-mx-1 flex flex-nowrap gap-1 overflow-x-auto border-b border-line px-1">
       {TABS.map((tab) => {
         const isActive = active === tab.key;
         return (
@@ -32,7 +37,7 @@ export default function MatchTabs({
             key={tab.key}
             href={tab.href(id)}
             aria-current={isActive ? "page" : undefined}
-            className={`focus-ring flex items-center gap-1.5 px-3 py-2 text-sm font-medium ${
+            className={`focus-ring flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2 text-sm font-medium ${
               isActive ? "border-b-2 border-ink text-ink" : "text-muted hover:text-ink"
             }`}
           >

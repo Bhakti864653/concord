@@ -18,10 +18,22 @@ export default function MobileNav({ primaryMatchId }: { primaryMatchId: string |
       : []),
   ];
 
+  const chatHref = primaryMatchId ? `/match/${primaryMatchId}/chat` : null;
+  const inChat = chatHref ? pathname === chatHref || pathname.startsWith(`${chatHref}/`) : false;
+
+  // "Match" covers the whole match workspace (overview, our plan, check-ins,
+  // more) since those all live under /match/[id]/*, but Chat has its own
+  // tab - exclude it here so the two links can't both read active at once.
+  function isActive(item: (typeof items)[number]) {
+    const withinHref = pathname === item.href || pathname.startsWith(`${item.href}/`);
+    if (item.icon === "match") return withinHref && !inChat;
+    return withinHref;
+  }
+
   return (
     <nav className="fixed inset-x-2.5 bottom-2.5 z-10 flex justify-around rounded-2xl bg-ink p-2 shadow-lg sm:hidden">
       {items.map((item) => {
-        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const active = isActive(item);
         return (
           <Link
             key={item.href}

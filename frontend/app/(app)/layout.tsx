@@ -41,7 +41,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[1400px]">
       <Sidebar primaryMatchId={primaryMatchId} isAdmin={!!isAdmin} profileComplete={profileComplete} />
-      <main className="min-w-0 flex-1 px-4 pb-24 pt-4 sm:px-8 sm:pb-10">{children}</main>
+      {/* Extra top clearance on mobile only, clearing the fixed
+          GlobalThemeToggle that renders there (desktop has it in the
+          sidebar, not floating over content). */}
+      <main className="min-w-0 flex-1 px-4 pb-24 pt-14 sm:px-8 sm:pb-10 sm:pt-4">{children}</main>
       <MobileNav primaryMatchId={primaryMatchId} />
     </div>
   );

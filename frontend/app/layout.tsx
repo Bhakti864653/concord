@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 import HelpWidget from "@/components/HelpWidget";
+import GlobalThemeToggle from "@/components/GlobalThemeToggle";
 import "./globals.css";
 
 const inter = Inter({
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col font-sans">
         {children}
+        <GlobalThemeToggle />
         <HelpWidget />
       </body>
     </html>
