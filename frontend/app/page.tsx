@@ -3,6 +3,7 @@ import Logo from "@/components/Logo";
 import { buttonClasses } from "@/components/ui/Button";
 import TryDemoButton from "@/components/TryDemoButton";
 import PageTransition from "@/components/PageTransition";
+import LandingJourneyVisual from "@/components/landing/LandingJourneyVisual";
 
 export default function Home() {
   return (
@@ -12,6 +13,13 @@ export default function Home() {
         aria-hidden="true"
         className="concord-mark-fade concord-glow pointer-events-none fixed inset-0 -z-10"
       />
+      {/* "Two journeys" - the interactive 3D introduction of the app's
+          convergence metaphor, layered above the flat ambient glow and
+          behind all hero copy/buttons (pointer-events disabled throughout,
+          see LandingJourneyVisual/ConcordSceneCanvas). Degrades to a static
+          SVG of the same motif under reduced motion, no WebGL, or before
+          its JS chunk has loaded. */}
+      <LandingJourneyVisual />
 
       <div className="relative mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 items-center gap-12 lg:grid-cols-[1.15fr_.85fr]">
         <div className="flex flex-col gap-8">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { runGaleShapleySim } from "@/lib/galeShapleySim";
+import StableMatchingVisualizer from "./StableMatchingVisualizer";
 
 const MENTEES = [
   { id: "Alex", tagline: "wants help with college essays" },
@@ -15,8 +15,6 @@ const MENTORS = [
   { id: "Farah", tagline: "mentors in career advice" },
 ];
 
-type Result = { matches: Record<string, string>; log: string[] } | null;
-
 export default function Sandbox() {
   const [menteePrefs, setMenteePrefs] = useState<Record<string, string[]>>(
     Object.fromEntries(MENTEES.map((m) => [m.id, MENTORS.map((t) => t.id)])),
@@ -27,7 +25,6 @@ export default function Sandbox() {
   const [capacity, setCapacity] = useState<Record<string, number>>(
     Object.fromEntries(MENTORS.map((t) => [t.id, 1])),
   );
-  const [result, setResult] = useState<Result>(null);
 
   function move(
     setter: typeof setMenteePrefs,
@@ -42,10 +39,6 @@ export default function Sandbox() {
     const next = [...list];
     [next[index], next[target]] = [next[target], next[index]];
     setter({ ...prefs, [ownerId]: next });
-  }
-
-  function handleRun() {
-    setResult(runGaleShapleySim(menteePrefs, mentorPrefs, capacity));
   }
 
   return (
@@ -148,40 +141,13 @@ export default function Sandbox() {
         </div>
       </div>
 
-      <button
-        onClick={handleRun}
-        className="self-start rounded-md bg-ink px-5 py-2.5 font-medium text-paper transition-opacity hover:opacity-90"
-      >
-        Run the matching algorithm
-      </button>
-
-      {result && (
-        <div className="flex flex-col gap-4">
-          <div>
-            <h3 className="text-sm font-semibold text-ink">Result</h3>
-            <div className="mt-2 flex flex-col gap-1">
-              {MENTEES.map((mentee) => (
-                <p key={mentee.id} className="text-sm text-ink">
-                  {mentee.id} →{" "}
-                  {result.matches[mentee.id] ?? (
-                    <span className="text-muted">unmatched (waitlisted)</span>
-                  )}
-                </p>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-ink">Step by step</h3>
-            <ol className="mt-2 flex flex-col gap-1 text-sm text-muted">
-              {result.log.map((line, i) => (
-                <li key={i}>
-                  {i + 1}. {line}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      )}
+      <StableMatchingVisualizer
+        menteeIds={MENTEES.map((m) => m.id)}
+        mentorIds={MENTORS.map((t) => t.id)}
+        menteePrefs={menteePrefs}
+        mentorPrefs={mentorPrefs}
+        capacity={capacity}
+      />
     </div>
   );
 }
