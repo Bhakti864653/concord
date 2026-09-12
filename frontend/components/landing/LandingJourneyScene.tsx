@@ -40,18 +40,24 @@ export default function LandingJourneyScene({
   const compact = useIsCompactDevice();
 
   return (
-    <ConcordSceneCanvas className="h-full w-full" cameraPosition={[0, 0, 6.5]} fov={36}>
+    <ConcordSceneCanvas
+      className="h-full w-full"
+      cameraPosition={[0, 0, 7.2]}
+      fov={34}
+      fogColor={colors.paper}
+      fogRange={[5, 10.5]}
+    >
       <ParallaxRig>
-        <group position={[1.1, -0.25, 0]} scale={compact ? 0.85 : 1.05}>
+        <group position={[1.15, -0.2, 0]} scale={compact ? 0.8 : 1}>
           <ConvergingPaths
             progress={progress}
             menteeColor={colors.mentee}
             mentorColor={colors.mentor}
             accordColor={colors.accord}
             spread={compact ? 2.1 : 2.8}
-            endPoint={[0.4, -0.1, 0.3]}
-            nodesPerPath={3}
+            endPoint={[0.5, -0.05, 0.5]}
             compact={compact}
+            lightweight={compact}
           />
         </group>
       </ParallaxRig>

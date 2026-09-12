@@ -90,17 +90,20 @@ export default async function MatchPage({
         aria-hidden="true"
         className="concord-glow pointer-events-none fixed inset-0 -z-10"
       />
-      <div className="relative mx-auto flex w-full max-w-2xl flex-col gap-6">
-        <div className="relative">
-          <MatchTabs id={id} active="overview" />
-        </div>
+      <div className="relative mx-auto w-full max-w-2xl">
+        <MatchTabs id={id} active="overview" />
+      </div>
 
-        {/* The signature moment: two paths (mentee/mentor) meeting in the
-            middle. MatchHeroReveal decides, client-side and per-browser,
-            whether this is a first-ever view of this match (full 3D
-            "convergence" entrance, skippable) or a returning view (the
-            calm static hero, unchanged from before) - see its own comment
-            for why. */}
+      {/* The signature moment: two paths (mentee/mentor) meeting in the
+          middle. MatchHeroReveal decides, client-side and per-browser,
+          whether this is a first-ever view of this match (full 3D
+          "convergence" entrance, skippable) or a returning view (the calm
+          static hero, unchanged from before) - see its own comment for
+          why. Deliberately rendered here, outside the max-w-2xl column
+          below, so the cinematic entrance can go full-width (~60-75vh) -
+          MatchHeroReveal re-applies the column constraint itself once it's
+          showing the static hero instead. */}
+      <div className="relative mt-6">
         <MatchHeroReveal
           matchId={id}
           ownRole={userType}
@@ -111,7 +114,9 @@ export default async function MatchPage({
           reasonChips={reasonChips}
           isEnded={match.status === "ended"}
         />
+      </div>
 
+      <div className="relative mx-auto mt-6 flex w-full max-w-2xl flex-col gap-6">
         {match.status === "ended" ? (
           <p className="text-sm text-muted">
             This match has ended. You&apos;ll be included in the next matching round.

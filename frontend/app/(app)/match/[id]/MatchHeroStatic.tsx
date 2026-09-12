@@ -18,12 +18,15 @@ export default function MatchHeroStatic({
   counterpartRole,
   counterpartTopic,
   reasonChips,
+  onReplay,
 }: {
   ownRole: "mentee" | "mentor";
   ownTopic: string;
   counterpartRole: "mentee" | "mentor";
   counterpartTopic: string;
   reasonChips: MatchReasonChip[];
+  /** Omitted (not just disabled) when a replay can't actually run - see MatchHeroReveal.tsx. */
+  onReplay?: () => void;
 }) {
   return (
     <section className="match-reveal-in concord-lift relative flex flex-col items-center gap-5 rounded-[28px] bg-paper-raised px-5 py-7 sm:px-8">
@@ -63,6 +66,16 @@ export default function MatchHeroStatic({
       </div>
 
       <MatchReasonChips reasons={reasonChips} />
+
+      {onReplay && (
+        <button
+          type="button"
+          onClick={onReplay}
+          className="focus-ring rounded text-xs text-muted underline hover:text-ink"
+        >
+          Replay reveal
+        </button>
+      )}
     </section>
   );
 }

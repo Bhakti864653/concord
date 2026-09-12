@@ -22,6 +22,7 @@ export default function ProposalLine({
   color,
   style,
   opacity,
+  drawProgress = 1,
 }: {
   from: [number, number, number];
   to: [number, number, number];
@@ -29,14 +30,24 @@ export default function ProposalLine({
   style: ProposalLineStyle;
   /** Overrides the style's default opacity - used to fade a tentative hold vs. a final stable match. */
   opacity?: number;
+  /** 0..1 - how much of the line (from `from` toward `to`) is currently visible, for a "draws across space" reveal instead of snapping in. */
+  drawProgress?: number;
 }) {
-  const points = useMemo(() => {
+  const fullPoints = useMemo(() => {
     const start = new THREE.Vector3(...from);
     const end = new THREE.Vector3(...to);
     const mid = start.clone().lerp(end, 0.5);
     mid.z += 0.4;
-    return new THREE.QuadraticBezierCurve3(start, mid, end).getPoints(20);
+    return new THREE.QuadraticBezierCurve3(start, mid, end).getPoints(24);
   }, [from, to]);
+
+  const points = useMemo(() => {
+    const clamped = Math.min(1, Math.max(0, drawProgress));
+    const count = Math.max(2, Math.round(fullPoints.length * clamped));
+    return fullPoints.slice(0, count);
+  }, [fullPoints, drawProgress]);
+
+  if (points.length < 2) return null;
 
   const held = style === "held";
   const resolvedOpacity = opacity ?? (held ? 0.85 : 0.4);

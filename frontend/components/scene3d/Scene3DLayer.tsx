@@ -1,28 +1,34 @@
 "use client";
 
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { useReducedMotion } from "./hooks/useReducedMotion";
 import { useWebGLSupport } from "./hooks/useWebGLSupport";
-import StaticConnectionFallback from "./StaticConnectionFallback";
 
 /**
  * The shared progressive-enhancement gate all three experiences mount
- * through: the static 2D fallback is always in the DOM first (so the page
- * is never blank while a scene's JS chunk downloads, and it's the
- * permanent view under reduced-motion or no WebGL), and the live 3D scene
- * only fades in on top once both checks pass. `Scene` should already be a
- * `next/dynamic(..., { ssr: false })` component created at its own call
- * site (not here) so each experience controls its own code-split chunk.
+ * through: the caller's own purpose-built fallback is always in the DOM
+ * first (so the page is never blank while a scene's JS chunk downloads,
+ * and it's the permanent view under reduced-motion or no WebGL), and the
+ * live 3D scene only fades in on top once both checks pass. `Scene` should
+ * already be a `next/dynamic(..., { ssr: false })` component created at
+ * its own call site (not here) so each experience controls its own
+ * code-split chunk. `fallback` is a real, distinct visual per experience
+ * (see LandingStaticFallback/MatchStaticFallback/AlgorithmStaticFallback) -
+ * not shared - since a single generic fallback can't do justice to three
+ * differently-composed scenes. Any real accessible text (names, labels,
+ * status) belongs in HTML the caller renders alongside this, not inside
+ * either the fallback or the 3D scene - both are purely visual and stay
+ * aria-hidden.
  */
 export default function Scene3DLayer<P extends object>({
   Scene,
   sceneProps,
-  fallbackVariant = "landing",
+  fallback,
   className = "",
 }: {
   Scene: ComponentType<P>;
   sceneProps: P;
-  fallbackVariant?: "landing" | "reveal" | "algorithm";
+  fallback: ReactNode;
   className?: string;
 }) {
   const reducedMotion = useReducedMotion();
@@ -40,12 +46,13 @@ export default function Scene3DLayer<P extends object>({
   return (
     <div className={className} aria-hidden="true">
       <div className="relative h-full w-full">
-        <StaticConnectionFallback
-          variant={fallbackVariant}
+        <div
           className={`absolute inset-0 h-full w-full transition-opacity duration-700 ${
             canRender3D ? "opacity-0" : "opacity-100"
           }`}
-        />
+        >
+          {fallback}
+        </div>
         {canRender3D && (
           <div className="absolute inset-0 h-full w-full">
             <Scene {...sceneProps} />

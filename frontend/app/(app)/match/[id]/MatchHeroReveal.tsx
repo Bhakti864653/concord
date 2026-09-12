@@ -80,7 +80,20 @@ export default function MatchHeroReveal({
     setShowDrama(false);
   }
 
+  // The match id is already marked "seen" by this point in every real case
+  // that reaches here (either it was seen already, or the automatic
+  // trigger above just marked it) - replay only needs to flip the overlay
+  // back on, not touch localStorage again.
+  function replay() {
+    setShowDrama(true);
+  }
+
   if (showDrama) {
+    // Deliberately NOT wrapped in the reading column's max-w-2xl here -
+    // the cinematic reveal renders full-width (see match/[id]/page.tsx,
+    // which mounts this component outside that column specifically so
+    // this stage can do that); the static hero below restores the
+    // constraint itself since it still belongs in the normal reading flow.
     return (
       <MatchRevealOverlay
         ownRole={ownRole}
@@ -94,13 +107,18 @@ export default function MatchHeroReveal({
     );
   }
 
+  const canReplay = !reducedMotion && webglSupported === true;
+
   return (
-    <MatchHeroStatic
-      ownRole={ownRole}
-      ownTopic={ownTopic}
-      counterpartRole={counterpartRole}
-      counterpartTopic={counterpartTopic}
-      reasonChips={reasonChips}
-    />
+    <div className="mx-auto w-full max-w-2xl">
+      <MatchHeroStatic
+        ownRole={ownRole}
+        ownTopic={ownTopic}
+        counterpartRole={counterpartRole}
+        counterpartTopic={counterpartTopic}
+        reasonChips={reasonChips}
+        onReplay={canReplay ? replay : undefined}
+      />
+    </div>
   );
 }

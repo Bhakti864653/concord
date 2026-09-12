@@ -4,21 +4,25 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Scene3DLayer from "@/components/scene3d/Scene3DLayer";
 import { useConcordColors } from "@/components/scene3d/hooks/useConcordColors";
+import LandingStaticFallback from "./LandingStaticFallback";
 
 const LandingJourneyScene = dynamic(() => import("./LandingJourneyScene"), { ssr: false });
 
-const ENTRANCE_MS = 1400;
-const ENTRANCE_TARGET = 0.55;
+const ENTRANCE_MS = 2000;
+const ENTRANCE_TARGET = 0.62;
 const SCROLL_MAX_PX = 480;
 const SCROLL_NUDGE = 0.4;
 
 /**
  * Drives the hero scene's `progress` (0 = paths fully separate, 1 = fully
- * converged): a short one-time ease-out entrance on mount up to ~0.55, then
- * scroll nudges it the rest of the way as the visitor scrolls past the
- * hero. The entrance rAF loop stops itself once it finishes; scroll updates
- * are event-driven and rAF-throttled, not a perpetual loop, so this never
- * spends frames once the hero is idle and unscrolled.
+ * converged): a noticeable ~2s one-time ease-out entrance on mount up to
+ * ~0.62, then scroll nudges it the rest of the way as the visitor scrolls
+ * past the hero. The entrance rAF loop stops itself once it finishes;
+ * scroll updates are event-driven and rAF-throttled, not a perpetual loop.
+ * Ambient life after the entrance (traveling nodes, the core's slow tumble)
+ * comes from ConvergingPaths/ConcordCore's own useFrame animations, which
+ * keep running independent of this progress value - not from anything
+ * driven here.
  */
 export default function LandingJourneyVisual() {
   const colors = useConcordColors();
@@ -65,7 +69,7 @@ export default function LandingJourneyVisual() {
     <Scene3DLayer
       Scene={LandingJourneyScene}
       sceneProps={{ progress, colors }}
-      fallbackVariant="landing"
+      fallback={<LandingStaticFallback className="h-full w-full" />}
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
     />
   );
