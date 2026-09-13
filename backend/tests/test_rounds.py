@@ -2,11 +2,20 @@ import pytest
 from fastapi import HTTPException
 
 from app import rounds
+from app.ai_explanation import generate_ai_explanation
 from app.rounds import _advance, _run_matching, get_current_round, require_preferences_open
 
 
+class FakeBackgroundTasks:
+    def __init__(self):
+        self.tasks: list[tuple] = []
+
+    def add_task(self, func, *args, **kwargs):
+        self.tasks.append((func, args, kwargs))
+
+
 class FakeQuery:
-    def __init__(self, rows, on_insert=None, on_update=None):
+    def __init__(self, rows, on_insert=None, on_update=None, generate_ids=False):
         self._rows = rows
         self._filters: dict = {}
         self._order = None
@@ -14,6 +23,8 @@ class FakeQuery:
         self._single = False
         self._on_insert = on_insert
         self._on_update = on_update
+        self._generate_ids = generate_ids
+        self._inserted = None
 
     def select(self, *_args, **_kwargs):
         return self
@@ -37,6 +48,13 @@ class FakeQuery:
     def insert(self, row):
         if self._on_insert:
             self._on_insert(row)
+        # Mirrors real Supabase insert() behavior (return=representation):
+        # .execute().data comes back as the inserted row(s), each with a
+        # generated id - needed since rounds.py now reads the new match
+        # ids straight off this response to schedule AI generation.
+        if self._generate_ids:
+            rows = row if isinstance(row, list) else [row]
+            self._inserted = [{**r, "id": r.get("id", f"generated-{i}")} for i, r in enumerate(rows)]
         return self
 
     def update(self, row):
@@ -49,6 +67,8 @@ class FakeQuery:
 
     @property
     def data(self):
+        if self._inserted is not None:
+            return self._inserted
         matches = [
             r for r in self._rows if all(r.get(k) == v for k, v in self._filters.items())
         ]
@@ -77,7 +97,9 @@ class FakeAdminClient:
             )
         if name == "matches":
             return FakeQuery(
-                self._tables.get("matches", []), on_insert=self.match_inserts.append
+                self._tables.get("matches", []),
+                on_insert=self.match_inserts.append,
+                generate_ids=True,
             )
         return FakeQuery(self._tables.get(name, []))
 
@@ -207,3 +229,36 @@ def test_advance_from_results_available_starts_a_fresh_round():
     result = _advance(fake, {"id": "r1", "status": "results_available"})
     assert result == {"status": "preferences_open"}
     assert fake.round_inserts == [{"status": "preferences_open"}]
+
+
+def _single_new_match_fixture():
+    return {
+        "matches": [],
+        "mentee_preferences": [
+            {"user_id": "mentee-1", "ranked_mentor_ids": ["mentor-1"], "locked": True}
+        ],
+        "mentor_preferences": [
+            {"user_id": "mentor-1", "ranked_mentee_ids": ["mentee-1"], "locked": True}
+        ],
+        "mentor_profiles": [{"user_id": "mentor-1", "availability_count": 1}],
+    }
+
+
+def test_run_matching_schedules_ai_explanation_for_each_new_match():
+    fake = FakeAdminClient(_single_new_match_fixture())
+    bg = FakeBackgroundTasks()
+
+    _run_matching(fake, bg)
+
+    assert len(bg.tasks) == 1
+    func, args, _kwargs = bg.tasks[0]
+    assert func is generate_ai_explanation
+    assert args == ("generated-0",)
+
+
+def test_run_matching_without_background_tasks_schedules_nothing_and_still_works():
+    # No background_tasks passed - the pre-existing call shape (used by the
+    # other _run_matching tests above) must keep working unchanged.
+    fake = FakeAdminClient(_single_new_match_fixture())
+    result = _run_matching(fake)
+    assert result["newly_matched_count"] == 1

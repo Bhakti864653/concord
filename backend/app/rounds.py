@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Header, HTTPException
 
 from .auth import require_admin
 from .gale_shapley import run_gale_shapley
@@ -35,12 +35,19 @@ def require_preferences_open(admin) -> None:
         )
 
 
-def _run_matching(admin) -> dict:
+def _run_matching(admin, background_tasks: BackgroundTasks | None = None) -> dict:
     """The actual Gale-Shapley run, scoped to only the currently-unmatched
     pool. Existing active matches are left untouched (only new rows are
     inserted) rather than wiped and recomputed on every run - rounds are
     meant to top up capacity incrementally for whoever is waitlisted, not
-    reshuffle people who are already matched."""
+    reshuffle people who are already matched.
+
+    `background_tasks` is optional (and unused by the existing unit tests
+    below, which call this directly) so a real request schedules the AI
+    match-narrative generation - which must run strictly after this insert
+    commits, and must never block or fail this response - for each newly
+    created match, without changing this function's return value or its
+    existing callers' signatures."""
     active_matches = (
         admin.table("matches")
         .select("mentee_user_id, mentor_user_id")
@@ -97,7 +104,17 @@ def _run_matching(admin) -> dict:
             {"mentee_user_id": mentee_id, "mentor_user_id": mentor_id}
             for mentee_id, mentor_id in result.items()
         ]
-        admin.table("matches").insert(rows).execute()
+        inserted = admin.table("matches").insert(rows).execute().data or []
+        if background_tasks is not None:
+            # Imported here, not at module level - app.ai_explanation
+            # imports app.matching, which imports this module for
+            # require_preferences_open, so a top-level import here would be
+            # a circular import.
+            from .ai_explanation import generate_ai_explanation
+
+            for row in inserted:
+                if row.get("id"):
+                    background_tasks.add_task(generate_ai_explanation, row["id"])
 
     return {
         "newly_matched_count": len(result),
@@ -105,7 +122,7 @@ def _run_matching(admin) -> dict:
     }
 
 
-def _advance(admin, current: dict) -> dict:
+def _advance(admin, current: dict, background_tasks: BackgroundTasks | None = None) -> dict:
     """The core state-transition logic, kept separate from the route so it
     can be unit tested without going through require_admin/header
     parsing."""
@@ -125,7 +142,7 @@ def _advance(admin, current: dict) -> dict:
         return {"status": "matching_in_progress"}
 
     if status == "matching_in_progress":
-        result = _run_matching(admin)
+        result = _run_matching(admin, background_tasks)
         admin.table("matching_rounds").update(
             {"status": "results_available", "completed_at": now}
         ).eq("id", current["id"]).execute()
@@ -137,8 +154,11 @@ def _advance(admin, current: dict) -> dict:
 
 
 @router.post("/matching/rounds/advance")
-def advance_round(authorization: str | None = Header(default=None)):
+def advance_round(
+    background_tasks: BackgroundTasks,
+    authorization: str | None = Header(default=None),
+):
     require_admin(authorization)
     admin = get_admin_client()
     current = get_current_round(admin)
-    return _advance(admin, current)
+    return _advance(admin, current, background_tasks)

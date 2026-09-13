@@ -9,6 +9,7 @@ import { loadMatchProgress } from "@/lib/matchProgress";
 import { buildIcebreaker } from "@/lib/icebreaker";
 import NextActionCard from "@/components/mentorship/NextActionCard";
 import { type MatchReasonChip } from "@/components/mentorship/MatchReasonChips";
+import AiMatchNarrative from "./AiMatchNarrative";
 import MatchExplanation from "./MatchExplanation";
 import MatchTabs from "./MatchTabs";
 import MatchHeroReveal from "./MatchHeroReveal";
@@ -146,6 +147,10 @@ export default async function MatchPage({
           <h2 className="text-sm font-medium text-muted">Icebreaker</h2>
           <p className="text-sm text-ink">{icebreaker}</p>
         </section>
+
+        <div className="relative">
+          <AiMatchNarrative matchId={id} />
+        </div>
 
         <div className="relative">
           <MatchExplanation matchId={id} isMentee={isMentee} />
