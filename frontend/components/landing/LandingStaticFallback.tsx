@@ -7,12 +7,13 @@
  * "Concord core" motif the live scene builds in 3D, so neither version
  * reads as a downgrade of the other.
  *
- * Deliberately confined to the right ~45% of the viewBox (not spanning
- * edge to edge) - this is the same composition fix as the live 3D scene:
- * the parent's opacity mask (see LandingJourneyVisual.tsx) already keeps
- * the left column clear, but the paths themselves are drawn short and
- * right-biased too, so there's nothing wide/diagonal for that mask to be
- * doing the only work of hiding.
+ * Confined to the right ~45% of the viewBox, with the core placed at the
+ * visual area's own center (not tucked into the top-right corner): one
+ * path rises from the lower-left of that area, the other descends from
+ * the upper-right, meeting the core from clearly different angles. Two
+ * paths hanging straight down in parallel from rings at the very top read
+ * as scissors or balloon strings - approaching from opposing diagonals is
+ * what makes it read as two journeys actually converging.
  */
 export default function LandingStaticFallback({ className = "" }: { className?: string }) {
   return (
@@ -34,7 +35,7 @@ export default function LandingStaticFallback({ className = "" }: { className?: 
 
       {/* Background echoes - the same two curves, larger and blurred, for depth. */}
       <path
-        d="M 260 260 C 320 250, 360 200, 390 160 S 430 90, 440 60"
+        d="M 252 200 C 280 232, 306 214, 320 178 S 335 154, 344 153"
         fill="none"
         stroke="var(--mentee-glow)"
         strokeWidth="16"
@@ -43,7 +44,7 @@ export default function LandingStaticFallback({ className = "" }: { className?: 
         filter="url(#landing-fallback-soft)"
       />
       <path
-        d="M 470 190 C 460 150, 450 100, 440 60"
+        d="M 396 46 C 380 82, 407 100, 398 128 S 366 150, 349 151"
         fill="none"
         stroke="var(--mentor-glow)"
         strokeWidth="14"
@@ -54,9 +55,13 @@ export default function LandingStaticFallback({ className = "" }: { className?: 
 
       {/* Foreground ribbons - a bright core stroke plus a slightly offset,
           lighter highlight stroke to suggest a lit, dimensional tube
-          rather than a flat line. */}
+          rather than a flat line. Mentee sweeps in from the lower-left of
+          the visual area with a dip-then-rise bow; mentor bulges down from
+          the upper-right with its own, differently-shaped curve - distinct
+          silhouettes approaching from different angles, not a symmetric V
+          or two lines dropping in parallel from the rings. */}
       <path
-        d="M 265 255 C 322 246, 358 198, 388 158 S 428 88, 438 62"
+        d="M 258 202 C 284 232, 308 216, 322 180 S 336 156, 346 155"
         fill="none"
         stroke="var(--mentee)"
         strokeWidth="5.5"
@@ -64,16 +69,16 @@ export default function LandingStaticFallback({ className = "" }: { className?: 
         opacity="0.9"
       />
       <path
-        d="M 265 249 C 322 240, 358 192, 388 152 S 428 83, 438 57"
+        d="M 252 197 C 279 226, 302 211, 316 175 S 331 151, 341 150"
         fill="none"
         stroke="var(--mentee-glow)"
         strokeWidth="2"
         strokeLinecap="round"
-        opacity="0.55"
+        opacity="0.5"
       />
 
       <path
-        d="M 468 185 C 459 147, 449 100, 439 63"
+        d="M 391 48 C 375 84, 402 102, 393 130 S 361 152, 344 153"
         fill="none"
         stroke="var(--mentor)"
         strokeWidth="5.5"
@@ -81,25 +86,26 @@ export default function LandingStaticFallback({ className = "" }: { className?: 
         opacity="0.9"
       />
       <path
-        d="M 462 183 C 453 146, 444 99, 434 62"
+        d="M 397 44 C 381 80, 408 98, 399 126 S 367 148, 350 149"
         fill="none"
         stroke="var(--mentor-glow)"
         strokeWidth="2"
         strokeLinecap="round"
-        opacity="0.55"
+        opacity="0.5"
       />
 
       {/* A couple of small branch/experience nodes along each ribbon. */}
-      <circle cx="355" cy="205" r="4" fill="var(--mentee)" opacity="0.85" />
-      <circle cx="405" cy="120" r="3.6" fill="var(--mentee-glow)" opacity="0.65" />
-      <circle cx="453" cy="145" r="4" fill="var(--mentor)" opacity="0.85" />
-      <circle cx="443" cy="105" r="3.6" fill="var(--mentor-glow)" opacity="0.65" />
+      <circle cx="303" cy="203" r="4" fill="var(--mentee)" opacity="0.85" />
+      <circle cx="272" cy="213" r="3.6" fill="var(--mentee-glow)" opacity="0.6" />
+      <circle cx="398" cy="110" r="4" fill="var(--mentor)" opacity="0.85" />
+      <circle cx="380" cy="70" r="3.6" fill="var(--mentor-glow)" opacity="0.6" />
 
-      {/* The Concord core - two overlapping rings where the ribbons meet - ~25% smaller than the ribbon-scale rings would be. */}
-      <circle cx="435" cy="55" r="23" fill="var(--accord-glow)" opacity="0.25" filter="url(#landing-fallback-glow)" />
+      {/* The Concord core - two overlapping rings, sitting at the visual
+          area's own center rather than its top corner. */}
+      <circle cx="352" cy="150" r="23" fill="var(--accord-glow)" opacity="0.25" filter="url(#landing-fallback-glow)" />
       <circle
-        cx="424"
-        cy="57"
+        cx="341"
+        cy="152"
         r="16"
         fill="none"
         stroke="var(--mentee)"
@@ -107,15 +113,15 @@ export default function LandingStaticFallback({ className = "" }: { className?: 
         opacity="0.85"
       />
       <circle
-        cx="444"
-        cy="55"
+        cx="361"
+        cy="150"
         r="16"
         fill="none"
         stroke="var(--mentor)"
         strokeWidth="2.8"
         opacity="0.85"
       />
-      <circle cx="434" cy="56" r="4.5" fill="var(--accord)" opacity="0.9" />
+      <circle cx="351" cy="151" r="4.5" fill="var(--accord)" opacity="0.9" />
     </svg>
   );
 }

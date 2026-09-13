@@ -9,9 +9,24 @@ export default function Home() {
   return (
     <PageTransition>
     <main className="relative flex min-h-screen flex-1 items-center overflow-hidden px-6 py-10 sm:px-12 sm:py-16">
+      {/* A landing-only glow, deliberately not the shared .concord-glow
+          class other pages use (globals.css is untouched) - masked so the
+          left ~55% (the readable text column) stays close to the plain
+          cream/dark background, with the strongest color concentrated
+          center-right around the match-preview card and 3D artwork. */}
       <div
         aria-hidden="true"
-        className="concord-mark-fade concord-glow pointer-events-none fixed inset-0 -z-10"
+        className="concord-mark-fade pointer-events-none fixed inset-0 -z-10"
+        style={{
+          background:
+            "radial-gradient(circle at 64% 40%, var(--mentee-glow) 0%, transparent 55%), radial-gradient(circle at 84% 48%, var(--mentor-glow) 0%, transparent 55%)",
+          filter: "blur(100px)",
+          opacity: 0.18,
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0%, transparent 40%, black 72%, black 100%)",
+          maskImage:
+            "linear-gradient(to right, transparent 0%, transparent 40%, black 72%, black 100%)",
+        }}
       />
       {/* "Two journeys" - the interactive 3D introduction of the app's
           convergence metaphor, layered above the flat ambient glow and
