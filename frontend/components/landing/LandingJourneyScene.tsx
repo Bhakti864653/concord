@@ -25,10 +25,13 @@ function ParallaxRig({ children }: { children: ReactNode }) {
 }
 
 /**
- * "Two journeys" - the landing hero's introduction of the metaphor. Sits
- * behind the hero copy, biased toward the right side where the match
- * preview card lives on wide screens, so the paths visually resolve toward
- * it rather than toward empty space.
+ * "Two journeys" - the landing hero's introduction of the metaphor.
+ * Deliberately confined to the right portion of the scene, curving toward
+ * a compact ConcordCore anchored close to the match-preview card, rather
+ * than spanning the full width - the composition (spread, offset, core
+ * size) plus the opacity mask in LandingJourneyVisual.tsx are what keep
+ * every ribbon/node/branch/glow clear of the headline, paragraph, buttons,
+ * and "How it works" row instead of crossing them.
  */
 export default function LandingJourneyScene({
   progress,
@@ -48,16 +51,20 @@ export default function LandingJourneyScene({
       fogRange={[5, 10.5]}
     >
       <ParallaxRig>
-        <group position={[1.15, -0.2, 0]} scale={compact ? 0.8 : 1}>
+        <group
+          position={compact ? [1.5, -0.75, 0] : [2.35, -0.15, 0]}
+          scale={compact ? 0.7 : 0.9}
+        >
           <ConvergingPaths
             progress={progress}
             menteeColor={colors.mentee}
             mentorColor={colors.mentor}
             accordColor={colors.accord}
-            spread={compact ? 2.1 : 2.8}
-            endPoint={[0.5, -0.05, 0.5]}
+            spread={compact ? 1.1 : 1.5}
+            endPoint={[0.55, 0, 0.5]}
             compact={compact}
             lightweight={compact}
+            coreScale={0.75}
           />
         </group>
       </ParallaxRig>

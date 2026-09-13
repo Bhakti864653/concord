@@ -65,12 +65,27 @@ export default function LandingJourneyVisual() {
     };
   }, []);
 
+  // A soft opacity mask, not just repositioning - the scene reads as
+  // nearly transparent behind the left text column and only becomes fully
+  // visible from roughly the right third onward, so nothing can cross the
+  // headline/paragraph/buttons/"How it works" row even during scroll or
+  // pointer-parallax motion. Applies identically to the WebGL scene and
+  // the static fallback, since both render inside this same masked
+  // wrapper.
+  const maskImage =
+    "linear-gradient(to right, transparent 0%, transparent 34%, black 64%, black 100%)";
+
   return (
-    <Scene3DLayer
-      Scene={LandingJourneyScene}
-      sceneProps={{ progress, colors }}
-      fallback={<LandingStaticFallback className="h-full w-full" />}
+    <div
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-    />
+      style={{ WebkitMaskImage: maskImage, maskImage }}
+    >
+      <Scene3DLayer
+        Scene={LandingJourneyScene}
+        sceneProps={{ progress, colors }}
+        fallback={<LandingStaticFallback className="h-full w-full" />}
+        className="h-full w-full"
+      />
+    </div>
   );
 }

@@ -17,6 +17,8 @@ export type ConvergingPathsProps = {
   compact?: boolean;
   /** Renders the branch offshoots and traveling nodes at reduced detail. */
   lightweight?: boolean;
+  /** Multiplies the ConcordCore's own size independent of the ribbons - default 1 keeps every existing caller unchanged. */
+  coreScale?: number;
 };
 
 type CurveConfig = {
@@ -214,6 +216,7 @@ export default function ConvergingPaths({
   endPoint = [0, 0, 0.4],
   compact = false,
   lightweight = false,
+  coreScale = 1,
 }: ConvergingPathsProps) {
   const clamped = Math.min(1, Math.max(0, progress));
   const quantized = Math.round(clamped * 200) / 200;
@@ -287,6 +290,7 @@ export default function ConvergingPaths({
         mentorColor={mentorColor}
         accordColor={accordColor}
         formed={formed}
+        scale={coreScale}
       />
     </group>
   );
