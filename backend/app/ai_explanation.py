@@ -1,9 +1,9 @@
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import anthropic
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
 from .matching import explain_match
 from .rate_limit import rate_limit
@@ -16,6 +16,18 @@ MODEL = "claude-haiku-4-5-20251001"
 PROMPT_VERSION = "v1"
 MAX_EXPLANATION_CHARS = 700
 ANTHROPIC_TIMEOUT_SECONDS = 12.0
+
+# Bounded-retry policy - no Celery/Redis/queue: a "pending" row that's been
+# sitting untouched longer than this was almost certainly orphaned by a
+# server restart mid-generation (a real in-flight attempt is bounded by
+# ANTHROPIC_TIMEOUT_SECONDS plus the SDK's own retries, well under this),
+# so it's safe to reclaim. RETRYABLE_ERROR_CODES are transient-by-nature
+# failures worth another attempt; anything else (e.g. missing match/profile
+# context) is permanent and is never retried regardless of attempt_count.
+MAX_ATTEMPTS = 3
+STALE_PENDING_SECONDS = 120
+RETRY_BACKOFF_SECONDS = 30
+RETRYABLE_ERROR_CODES = {"timeout", "rate_limited", "provider_error", "empty_response"}
 
 SYSTEM_PROMPT = """\
 You are writing a short, warm introduction between two people who have just \
@@ -140,48 +152,154 @@ def _load_match_context(admin, match_id: str) -> dict | None:
     }
 
 
+def _is_stale(last_attempt_iso: str | None, now: datetime) -> bool:
+    if not last_attempt_iso:
+        return True
+    try:
+        last_attempt = datetime.fromisoformat(last_attempt_iso)
+    except ValueError:
+        return True
+    if last_attempt.tzinfo is None:
+        last_attempt = last_attempt.replace(tzinfo=timezone.utc)
+    return (now - last_attempt).total_seconds() >= STALE_PENDING_SECONDS
+
+
+def _retry_due(next_retry_iso: str | None, now: datetime) -> bool:
+    if not next_retry_iso:
+        return True
+    try:
+        next_retry = datetime.fromisoformat(next_retry_iso)
+    except ValueError:
+        return True
+    if next_retry.tzinfo is None:
+        next_retry = next_retry.replace(tzinfo=timezone.utc)
+    return now >= next_retry
+
+
+def _claim_attempt(admin, match_id: str) -> int | None:
+    """Atomically claims the right to (re)generate this match's
+    explanation, returning the attempt number to use, or None if nothing
+    should happen right now (already ready/in-flight/permanently failed/
+    exhausted). Two paths, both race-safe against a concurrent caller
+    doing the same thing for the same match_id:
+
+    1. No row yet (brand-new match, or an existing/demo match that never
+       had one): insert attempt 1. `match_id` is the table's primary key,
+       so a simultaneous second caller's insert fails with a conflict -
+       there can never be two first-attempt rows for the same match.
+    2. A row exists and looks stale/transiently-failed and under the
+       attempt cap: claim the next attempt via a conditional UPDATE
+       (`eq(status=...)` + `eq(attempt_count=...)`). Postgres only ever
+       lets one concurrent UPDATE match those exact old values - a second
+       caller's identical update affects zero rows and gets nothing back.
+    """
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+
+    try:
+        admin.table("match_ai_explanations").insert(
+            {
+                "match_id": match_id,
+                "status": "pending",
+                "attempt_count": 1,
+                "last_attempt_at": now_iso,
+            }
+        ).execute()
+        return 1
+    except Exception:
+        pass  # a row already exists - fall through to the retry path below
+
+    try:
+        existing = (
+            admin.table("match_ai_explanations")
+            .select("status, error_code, attempt_count, last_attempt_at, next_retry_at")
+            .eq("match_id", match_id)
+            .maybe_single()
+            .execute()
+        )
+        row = existing.data if existing else None
+    except Exception:
+        logger.warning("ai_explanation_table_unreachable match_id=%s", match_id)
+        return None
+
+    if not row:
+        return None
+
+    attempt_count = row.get("attempt_count") or 0
+    if attempt_count >= MAX_ATTEMPTS:
+        return None
+
+    status = row.get("status")
+    if status == "failed":
+        eligible = row.get("error_code") in RETRYABLE_ERROR_CODES and _retry_due(
+            row.get("next_retry_at"), now
+        )
+    elif status == "pending":
+        eligible = _is_stale(row.get("last_attempt_at"), now)
+    else:
+        eligible = False  # "ready" - never regenerate a success
+
+    if not eligible:
+        return None
+
+    next_attempt = attempt_count + 1
+    try:
+        result = (
+            admin.table("match_ai_explanations")
+            .update(
+                {
+                    "status": "pending",
+                    "attempt_count": next_attempt,
+                    "last_attempt_at": now_iso,
+                    "next_retry_at": None,
+                }
+            )
+            .eq("match_id", match_id)
+            .eq("status", status)
+            .eq("attempt_count", attempt_count)
+            .execute()
+        )
+    except Exception:
+        logger.warning("ai_explanation_table_unreachable match_id=%s", match_id)
+        return None
+
+    if not (result and result.data):
+        return None  # lost the race to another concurrent claimant
+    return next_attempt
+
+
+def _mark_failed(admin, match_id: str, error_code: str, attempt_number: int) -> None:
+    next_retry_at = None
+    if error_code in RETRYABLE_ERROR_CODES and attempt_number < MAX_ATTEMPTS:
+        next_retry_at = (
+            datetime.now(timezone.utc) + timedelta(seconds=RETRY_BACKOFF_SECONDS * attempt_number)
+        ).isoformat()
+    admin.table("match_ai_explanations").update(
+        {"status": "failed", "error_code": error_code, "next_retry_at": next_retry_at}
+    ).eq("match_id", match_id).execute()
+
+
 def generate_ai_explanation(match_id: str) -> None:
     """The background job: derives everything from `match_id` alone (never
     trusts a caller-supplied mentee/mentor pair), sends only the whitelisted
     facts to Anthropic, and always leaves the row in 'ready' or 'failed' -
     never raises, so a caller running this via BackgroundTasks can never
-    have it affect the request/response it was scheduled from. Idempotent:
-    if a row for this match already exists (in any status), this returns
-    immediately without calling Anthropic again."""
+    have it affect the request/response it was scheduled from. Safe to call
+    for the same match_id from multiple places (round-advance, the lazy GET
+    recovery path, a retry sweep) - `_claim_attempt` is the single gate that
+    decides whether this call actually does anything."""
     admin = get_admin_client()
 
-    try:
-        existing = (
-            admin.table("match_ai_explanations")
-            .select("match_id")
-            .eq("match_id", match_id)
-            .maybe_single()
-            .execute()
-        )
-        if existing and existing.data:
-            # Already generated (or in flight) - never charged twice for
-            # the same match. Small theoretical race window against a
-            # second, near-simultaneous call for the same match_id is
-            # acceptable here: matches are only ever created one at a
-            # time, from a single admin-triggered round advance.
-            return
-
-        admin.table("match_ai_explanations").insert(
-            {"match_id": match_id, "status": "pending"}
-        ).execute()
-    except Exception:
-        # Infrastructure not ready yet (e.g. the migration hasn't been run)
-        # or a transient Supabase error - this must never raise out of a
-        # BackgroundTasks job, and there's nothing useful to write a status
-        # to if the table itself isn't reachable.
-        logger.exception("Could not initialize match_ai_explanations row for match %s", match_id)
+    attempt_number = _claim_attempt(admin, match_id)
+    if attempt_number is None:
         return
 
     context = _load_match_context(admin, match_id)
     if not context:
-        admin.table("match_ai_explanations").update(
-            {"status": "failed", "error_code": "match_context_missing"}
-        ).eq("match_id", match_id).execute()
+        # Permanent failure - missing match/profile context won't fix
+        # itself on retry, so error_code is deliberately outside
+        # RETRYABLE_ERROR_CODES and _mark_failed leaves next_retry_at unset.
+        _mark_failed(admin, match_id, "match_context_missing", attempt_number)
         return
 
     payload = _build_whitelisted_payload(
@@ -204,32 +322,40 @@ def generate_ai_explanation(match_id: str) -> None:
             block.text for block in response.content if getattr(block, "type", None) == "text"
         ).strip()
     except anthropic.APITimeoutError:
-        logger.warning("AI explanation timed out for match %s", match_id)
-        admin.table("match_ai_explanations").update(
-            {"status": "failed", "error_code": "timeout"}
-        ).eq("match_id", match_id).execute()
+        logger.warning(
+            "ai_explanation_generation_failed match_id=%s error_code=timeout attempt=%s",
+            match_id,
+            attempt_number,
+        )
+        _mark_failed(admin, match_id, "timeout", attempt_number)
         return
     except anthropic.RateLimitError:
-        logger.warning("AI explanation rate-limited for match %s", match_id)
-        admin.table("match_ai_explanations").update(
-            {"status": "failed", "error_code": "rate_limited"}
-        ).eq("match_id", match_id).execute()
+        logger.warning(
+            "ai_explanation_generation_failed match_id=%s error_code=rate_limited attempt=%s",
+            match_id,
+            attempt_number,
+        )
+        _mark_failed(admin, match_id, "rate_limited", attempt_number)
         return
-    except Exception:
+    except Exception as exc:
         # Deliberately broad and last: any other provider/network failure
-        # (never a raw error body - see the module docstring above the
-        # table's error_code column) still leaves the match page working
-        # via the deterministic fallback, exactly like a timeout would.
-        logger.exception("AI explanation generation failed for match %s", match_id)
-        admin.table("match_ai_explanations").update(
-            {"status": "failed", "error_code": "provider_error"}
-        ).eq("match_id", match_id).execute()
+        # still leaves the match page working via the deterministic
+        # fallback, exactly like a timeout would. Never log str(exc) or the
+        # exception object itself (via logger.exception) - a provider
+        # error can carry request/response detail that doesn't belong in
+        # logs. type(exc).__name__ is a safe, coarse category only.
+        logger.warning(
+            "ai_explanation_generation_failed match_id=%s error_code=provider_error "
+            "attempt=%s error_type=%s",
+            match_id,
+            attempt_number,
+            type(exc).__name__,
+        )
+        _mark_failed(admin, match_id, "provider_error", attempt_number)
         return
 
     if not text:
-        admin.table("match_ai_explanations").update(
-            {"status": "failed", "error_code": "empty_response"}
-        ).eq("match_id", match_id).execute()
+        _mark_failed(admin, match_id, "empty_response", attempt_number)
         return
 
     if len(text) > MAX_EXPLANATION_CHARS:
@@ -249,6 +375,7 @@ def generate_ai_explanation(match_id: str) -> None:
 @router.get("/matches/{match_id}/ai-explanation")
 def get_ai_explanation(
     match_id: str,
+    background_tasks: BackgroundTasks,
     user_id: str = Depends(
         rate_limit("ai-explanation", max_calls=60, window_seconds=3600)
     ),
@@ -284,12 +411,23 @@ def get_ai_explanation(
         # philosophy as everywhere else in this feature. Falls through to
         # the deterministic fallback below exactly as if generation were
         # still pending.
-        logger.exception("Could not read match_ai_explanations for match %s", match_id)
+        logger.warning("ai_explanation_table_unreachable match_id=%s", match_id)
         row = None
     status = row["status"] if row else "pending"
 
     if status == "ready" and row.get("explanation"):
         return {"status": "ready", "explanation": row["explanation"], "is_fallback": False}
+
+    # Lazy-generation recovery path: covers matches that never went through
+    # the round-advance flow (matches that predate this feature, and
+    # demo.py's direct-insert matches) as well as a stale/transiently-failed
+    # row that's due for a retry. generate_ai_explanation's own
+    # _claim_attempt is the single source of truth for whether this
+    # actually does anything - scheduling it here is always safe, even if
+    # a row already exists and isn't eligible (it just no-ops after one
+    # extra read). The page never waits for this - it always returns the
+    # deterministic fallback below immediately.
+    background_tasks.add_task(generate_ai_explanation, match_id)
 
     context = _load_match_context(admin, match_id)
     fallback = (

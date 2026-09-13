@@ -21,6 +21,13 @@ create table match_ai_explanations (
   -- which could contain request/account details that don't belong in the
   -- database at all, let alone in a table match participants can read.
   error_code text,
+  -- Bounded-retry bookkeeping (no external queue): how many generation
+  -- attempts this match has had, when the most recent one started (used
+  -- to detect a "pending" row orphaned by a server restart), and the
+  -- earliest time a transient failure is allowed to retry.
+  attempt_count integer not null default 0,
+  last_attempt_at timestamptz,
+  next_retry_at timestamptz,
   created_at timestamptz not null default now()
 );
 

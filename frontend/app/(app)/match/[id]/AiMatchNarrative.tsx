@@ -14,6 +14,31 @@ type AiExplanation = {
 // own deterministic fallback) - never polls indefinitely.
 const POLL_DELAYS_MS = [2000, 4000, 6000];
 
+// Guards against a hung request outliving the component's own patience -
+// independent of authFetch's own internal abort, which only wraps the
+// fetch call itself and not the session lookup that happens before it.
+const REQUEST_TIMEOUT_MS = 8000;
+
+// Shown whenever the request fails, times out, or comes back with data
+// that doesn't look like a real explanation - never a raw error, and
+// never a skeleton that never resolves.
+const GENERIC_FALLBACK: AiExplanation = {
+  status: "failed",
+  explanation:
+    "You've been thoughtfully matched based on the goals and experience you each chose to share. This gives you a meaningful starting point for your first conversation.",
+  is_fallback: true,
+};
+
+function isValidExplanation(body: unknown): body is AiExplanation {
+  if (!body || typeof body !== "object") return false;
+  const b = body as Record<string, unknown>;
+  return (
+    (b.status === "pending" || b.status === "ready" || b.status === "failed") &&
+    typeof b.explanation === "string" &&
+    b.explanation.length > 0
+  );
+}
+
 /**
  * The AI-written "why you may work well together" narrative, layered
  * above the existing rules-based MatchExplanation - never replacing it.
@@ -21,9 +46,10 @@ const POLL_DELAYS_MS = [2000, 4000, 6000];
  * fetch, then either the AI narrative or Concord's own deterministic
  * fallback (built server-side from the same shared interests/tags the
  * factual explanation already shows) if generation is still pending or
- * failed. Fails quietly on a network error, same philosophy as
- * MatchExplanation.tsx - this is a nice-to-have layer, never something
- * that can block or break the match page.
+ * failed. A network/auth failure, a timeout, or an invalid response all
+ * settle on a short generic Concord fallback rather than an error or a
+ * skeleton that never resolves - this is a nice-to-have layer, never
+ * something that can block or break the match page.
  */
 export default function AiMatchNarrative({ matchId }: { matchId: string }) {
   const [data, setData] = useState<AiExplanation | null>(null);
@@ -31,30 +57,44 @@ export default function AiMatchNarrative({ matchId }: { matchId: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout>;
+    let pollTimeoutId: ReturnType<typeof setTimeout>;
 
     async function load() {
+      let requestTimeoutId: ReturnType<typeof setTimeout> | undefined;
       try {
-        const res = await authFetch(`/matches/${matchId}/ai-explanation`);
+        const res = await Promise.race([
+          authFetch(`/matches/${matchId}/ai-explanation`),
+          new Promise<never>((_resolve, reject) => {
+            requestTimeoutId = setTimeout(() => reject(new Error("timeout")), REQUEST_TIMEOUT_MS);
+          }),
+        ]);
+        clearTimeout(requestTimeoutId);
         const body = await res.json().catch(() => null);
-        if (!res.ok || !body) throw new Error("bad response");
         if (cancelled) return;
-        setData(body as AiExplanation);
+        if (!res.ok || !isValidExplanation(body)) {
+          setData((prev) => prev ?? GENERIC_FALLBACK);
+          return;
+        }
+        setData(body);
         if (body.status === "pending" && attemptRef.current < POLL_DELAYS_MS.length) {
           const delay = POLL_DELAYS_MS[attemptRef.current];
           attemptRef.current += 1;
-          timeoutId = setTimeout(load, delay);
+          pollTimeoutId = setTimeout(load, delay);
         }
       } catch {
-        // Network/auth hiccup - leave whatever was last rendered (or
-        // nothing, on the very first attempt) rather than showing an error.
+        // Network/auth hiccup or timeout - show the generic fallback
+        // instead of leaving the skeleton up forever, but don't clobber
+        // anything already successfully rendered from an earlier poll.
+        clearTimeout(requestTimeoutId);
+        if (cancelled) return;
+        setData((prev) => prev ?? GENERIC_FALLBACK);
       }
     }
     load();
 
     return () => {
       cancelled = true;
-      clearTimeout(timeoutId);
+      clearTimeout(pollTimeoutId);
     };
   }, [matchId]);
 
