@@ -308,7 +308,13 @@ def generate_ai_explanation(match_id: str) -> None:
 
     try:
         client = anthropic.Anthropic(
-            api_key=os.environ["ANTHROPIC_API_KEY"],
+            # .strip() matters: a key with a trailing newline/whitespace
+            # (easy to pick up when copy-pasting into a dashboard env var
+            # field) becomes an illegal HTTP header value and fails with a
+            # protocol-level connection error - not a straightforward auth
+            # error - making it look like a network issue instead of a
+            # credential formatting one.
+            api_key=os.environ["ANTHROPIC_API_KEY"].strip(),
             timeout=ANTHROPIC_TIMEOUT_SECONDS,
             max_retries=3,
         )
@@ -340,29 +346,22 @@ def generate_ai_explanation(match_id: str) -> None:
     except Exception as exc:
         # Deliberately broad and last: any other provider/network failure
         # still leaves the match page working via the deterministic
-        # fallback, exactly like a timeout would. Never log str(exc) or the
-        # exception object itself (via logger.exception) - a provider
-        # error can carry request/response detail that doesn't belong in
-        # logs. type(exc).__name__ is a safe, coarse category only. The
-        # cause's own message (cause_detail) is a protocol-layer string
-        # from httpx/h11 describing *what rule was violated*, not request
-        # content - but it's still redacted for the API key and truncated
-        # as defense in depth before it ever reaches logs.
-        cause = exc.__cause__
-        cause_detail = None
-        if cause is not None:
-            api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-            cause_detail = str(cause)[:300]
-            if api_key:
-                cause_detail = cause_detail.replace(api_key, "[REDACTED]")
+        # fallback, exactly like a timeout would. Never log str(exc), the
+        # exception object itself (via logger.exception), or the wrapped
+        # cause's own message - a LocalProtocolError's message literally
+        # embeds the illegal header value (learned this the hard way: an
+        # attempted redacted version of it still leaked a raw API key into
+        # Render's logs because the value appeared there as a bytes repr,
+        # which didn't match a plain-string redaction). type(exc).__name__
+        # and type(exc.__cause__).__name__ are safe, coarse categories only
+        # - never anything derived from str() of the exception chain.
         logger.warning(
             "ai_explanation_generation_failed match_id=%s error_code=provider_error "
-            "attempt=%s error_type=%s cause_type=%s cause_detail=%s",
+            "attempt=%s error_type=%s cause_type=%s",
             match_id,
             attempt_number,
             type(exc).__name__,
-            type(cause).__name__ if cause else None,
-            cause_detail,
+            type(exc.__cause__).__name__ if exc.__cause__ else None,
         )
         _mark_failed(admin, match_id, "provider_error", attempt_number)
         return
