@@ -343,14 +343,26 @@ def generate_ai_explanation(match_id: str) -> None:
         # fallback, exactly like a timeout would. Never log str(exc) or the
         # exception object itself (via logger.exception) - a provider
         # error can carry request/response detail that doesn't belong in
-        # logs. type(exc).__name__ is a safe, coarse category only.
+        # logs. type(exc).__name__ is a safe, coarse category only. The
+        # cause's own message (cause_detail) is a protocol-layer string
+        # from httpx/h11 describing *what rule was violated*, not request
+        # content - but it's still redacted for the API key and truncated
+        # as defense in depth before it ever reaches logs.
+        cause = exc.__cause__
+        cause_detail = None
+        if cause is not None:
+            api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+            cause_detail = str(cause)[:300]
+            if api_key:
+                cause_detail = cause_detail.replace(api_key, "[REDACTED]")
         logger.warning(
             "ai_explanation_generation_failed match_id=%s error_code=provider_error "
-            "attempt=%s error_type=%s cause_type=%s",
+            "attempt=%s error_type=%s cause_type=%s cause_detail=%s",
             match_id,
             attempt_number,
             type(exc).__name__,
-            type(exc.__cause__).__name__ if exc.__cause__ else None,
+            type(cause).__name__ if cause else None,
+            cause_detail,
         )
         _mark_failed(admin, match_id, "provider_error", attempt_number)
         return
