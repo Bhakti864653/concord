@@ -15,7 +15,7 @@ logger = logging.getLogger("concord")
 MODEL = "claude-haiku-4-5-20251001"
 PROMPT_VERSION = "v1"
 MAX_EXPLANATION_CHARS = 700
-ANTHROPIC_TIMEOUT_SECONDS = 12.0
+ANTHROPIC_TIMEOUT_SECONDS = 20.0
 
 # Bounded-retry policy - no Celery/Redis/queue: a "pending" row that's been
 # sitting untouched longer than this was almost certainly orphaned by a
@@ -310,7 +310,7 @@ def generate_ai_explanation(match_id: str) -> None:
         client = anthropic.Anthropic(
             api_key=os.environ["ANTHROPIC_API_KEY"],
             timeout=ANTHROPIC_TIMEOUT_SECONDS,
-            max_retries=2,
+            max_retries=3,
         )
         response = client.messages.create(
             model=MODEL,
@@ -346,10 +346,11 @@ def generate_ai_explanation(match_id: str) -> None:
         # logs. type(exc).__name__ is a safe, coarse category only.
         logger.warning(
             "ai_explanation_generation_failed match_id=%s error_code=provider_error "
-            "attempt=%s error_type=%s",
+            "attempt=%s error_type=%s cause_type=%s",
             match_id,
             attempt_number,
             type(exc).__name__,
+            type(exc.__cause__).__name__ if exc.__cause__ else None,
         )
         _mark_failed(admin, match_id, "provider_error", attempt_number)
         return
