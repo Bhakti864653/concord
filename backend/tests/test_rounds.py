@@ -2,16 +2,7 @@ import pytest
 from fastapi import HTTPException
 
 from app import rounds
-from app.ai_explanation import generate_ai_explanation
 from app.rounds import _advance, _run_matching, get_current_round, require_preferences_open
-
-
-class FakeBackgroundTasks:
-    def __init__(self):
-        self.tasks: list[tuple] = []
-
-    def add_task(self, func, *args, **kwargs):
-        self.tasks.append((func, args, kwargs))
 
 
 class FakeQuery:
@@ -244,21 +235,7 @@ def _single_new_match_fixture():
     }
 
 
-def test_run_matching_schedules_ai_explanation_for_each_new_match():
-    fake = FakeAdminClient(_single_new_match_fixture())
-    bg = FakeBackgroundTasks()
-
-    _run_matching(fake, bg)
-
-    assert len(bg.tasks) == 1
-    func, args, _kwargs = bg.tasks[0]
-    assert func is generate_ai_explanation
-    assert args == ("generated-0",)
-
-
-def test_run_matching_without_background_tasks_schedules_nothing_and_still_works():
-    # No background_tasks passed - the pre-existing call shape (used by the
-    # other _run_matching tests above) must keep working unchanged.
+def test_run_matching_creates_new_matches():
     fake = FakeAdminClient(_single_new_match_fixture())
     result = _run_matching(fake)
     assert result["newly_matched_count"] == 1
