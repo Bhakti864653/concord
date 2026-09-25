@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "@/components/Logo";
@@ -8,8 +8,16 @@ import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import PageTransition from "@/components/PageTransition";
+import { safeNextPath } from "@/lib/sessionExpired";
 
-export default function LoginPage() {
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ expired?: string; next?: string }>;
+}) {
+  const params = use(searchParams);
+  const expired = params.expired === "1";
+  const nextPath = safeNextPath(params.next);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +41,7 @@ export default function LoginPage() {
     }
     // Hard navigation - see signup/page.tsx for why, same cookie-timing
     // reasoning applies to a fresh sign-in.
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.href = "/dashboard";
+    window.location.href = nextPath ?? "/dashboard";
   }
 
   return (
@@ -54,6 +61,11 @@ export default function LoginPage() {
       </Link>
       <Card className="relative flex flex-col gap-6">
         <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">Log in</h1>
+        {expired && (
+          <p role="status" className="rounded-lg bg-accord-tint px-3 py-2 text-sm text-ink">
+            Your login expired. Please log in again to pick up where you left off.
+          </p>
+        )}
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <Input
             label="Email"

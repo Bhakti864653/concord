@@ -1,10 +1,12 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { markIntentionalSignOut } from "@/lib/sessionExpired";
 
 export default function LogoutButton() {
   async function handleLogout() {
     const supabase = createClient();
+    markIntentionalSignOut();
     await supabase.auth.signOut();
     // Hard navigation, not router.push - guarantees the next request (and
     // any immediate sign-up/log-in after it) starts from a server render

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import PageTransition from "@/components/PageTransition";
+import SessionWatcher from "@/components/SessionWatcher";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -41,6 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[1400px]">
+      <SessionWatcher />
       <Sidebar primaryMatchId={primaryMatchId} isAdmin={!!isAdmin} profileComplete={profileComplete} />
       {/* Extra top clearance on mobile only, clearing the fixed
           GlobalThemeToggle that renders there (desktop has it in the
