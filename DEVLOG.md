@@ -102,6 +102,8 @@ The 31 new backend tests passed before anything touched the real database, but a
 
 **A layout bug the tests couldn't see:** at tablet width, the "Potential mentors to invite" heading was squeezed into a narrow column next to its button. It now stacks until wide screens.
 
+**A dead end for mentees, now closed:** a mentee who signed in from an invitation link used to land on their dashboard with no explanation, because invitations need a mentor account and account types never change. The dashboard now tells them what happened and how to accept it with a separate mentor account. Dismissing the message also forgets the saved invitation.
+
 **Not verified in the browser:** claiming as a mentor and the five join steps. They need a real mentor account, so for now they're covered by unit tests only.
 
 ## Known limitations, deliberately left as-is
@@ -110,4 +112,3 @@ The 31 new backend tests passed before anything touched the real database, but a
 - **The in-memory rate limiter resets on every backend restart** (Render's free tier restarts idle instances) and doesn't share state across multiple instances. Acceptable for a single free-tier instance with no paid API cost at stake; a real multi-instance deployment would need a shared store like Redis.
 - **Invitations are link-only.** No email provider is configured, so Concord never emails anyone; the inviter shares the link. The "sent" status exists for a future provider but is never set today.
 - **There is no suspension UI.** `mentor_profiles.suspended_at` is honored everywhere but can only be set by the operator in the database.
-- **A mentee who signs in from an invitation link gets no message.** Invitations can only be accepted with a mentor account, and account types never change. The invitation page says so, but a mentee who signs in anyway just lands on their dashboard.

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PendingInviteNotice from "@/components/PendingInviteNotice";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import NotificationBell from "@/components/NotificationBell";
@@ -196,6 +197,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1220px] flex-col gap-6">
+      {isMentee && <PendingInviteNotice />}
       {mentorNotJoined && (
         <p className="rounded-[var(--radius-card)] border border-mentor/30 bg-mentor-tint p-4 text-sm text-ink">
           Mentees can&apos;t see or rank you yet.{" "}
