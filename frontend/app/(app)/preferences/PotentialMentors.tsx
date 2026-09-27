@@ -88,7 +88,7 @@ export default function PotentialMentors() {
 
   return (
     <section aria-labelledby="potential-heading" className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 border-t border-line pt-8 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-3 border-t border-line pt-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex max-w-2xl flex-col gap-1.5">
           <h2
             id="potential-heading"
