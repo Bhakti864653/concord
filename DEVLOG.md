@@ -86,9 +86,28 @@ Before treating any phase of this as finished, I went back through every backend
 
 **What I learned:** a feature about *adding* people to a system is a good moment to check who the system already assumes has agreed to be in it.
 
+## Checking the invitation feature against the real system, not just the tests
+
+The 31 new backend tests passed before anything touched the real database, but a few problems only showed up by reading the pages as a visitor would, or by thinking about where each request actually comes from.
+
+**The privacy copy contradicted the feature.** The first draft of the invitation page promised that opening it "doesn't tell anyone you visited." But opening a valid link is exactly what moves the inviter's status to *Opened*. The line now says so plainly: the person who invited you will see that it was opened. A promise on a privacy screen has to be checked against the status model, not written from memory.
+
+**A server-side fetch would have broken the rate limit.** The public invitation endpoint is limited per IP address. If the page had fetched the invitation on the server, every visitor's request would have come from Vercel's own servers, so all of them would have shared one tiny budget. The page fetches in the browser instead, so the limit applies to each visitor. That also means opening the link is one deliberate page view, not a prefetch.
+
+**The token must not leak through the URL.** Because the token lives in the link, the invitation page sets `referrer: no-referrer` and `noindex`, so it's never passed on to another site or listed by a search engine.
+
+**The migration was checked from the outside.** After running it in the Supabase SQL editor, I confirmed three things directly: the new columns exist, the one existing mentor was carried over as opted in, and an anonymous client gets `permission denied` when reading `mentor_invitations`, even for the `token_hash` column. That last check matters because RLS policies alone don't stop a column from being read. The column-level grants do.
+
+**End to end in the browser**, with a demo mentee: create an invitation → review screen (the create button stays disabled until the confirmation is ticked) → link → open it (the inviter's list shows *Opened*) → revoke (*Revoked*) → the same link now shows the generic "isn't valid anymore" page. The database held only the sha256 of the token, never the token itself. The demo's own mentor, who never opted in, correctly disappeared from "Available on Concord."
+
+**A layout bug the tests couldn't see:** at tablet width, the "Potential mentors to invite" heading was squeezed into a narrow column next to its button. It now stacks until wide screens.
+
+**Not verified in the browser:** claiming as a mentor and the five join steps. They need a real mentor account, so for now they're covered by unit tests only.
+
 ## Known limitations, deliberately left as-is
 
 - **`/matching/suggested-mentors` and `/matching/suggested-mentees` load every profile on the other side into memory and score them one by one.** Fine at the scale this app will ever actually run at (a handful of real users), but it's an O(n) full-table scan with no pagination - a real production version serving many users would need to page this or push the scoring into the database.
 - **The in-memory rate limiter resets on every backend restart** (Render's free tier restarts idle instances) and doesn't share state across multiple instances. Acceptable for a single free-tier instance with no paid API cost at stake; a real multi-instance deployment would need a shared store like Redis.
 - **Invitations are link-only.** No email provider is configured, so Concord never emails anyone; the inviter shares the link. The "sent" status exists for a future provider but is never set today.
 - **There is no suspension UI.** `mentor_profiles.suspended_at` is honored everywhere but can only be set by the operator in the database.
+- **A mentee who signs in from an invitation link gets no message.** Invitations can only be accepted with a mentor account, and account types never change. The invitation page says so, but a mentee who signs in anyway just lands on their dashboard.
