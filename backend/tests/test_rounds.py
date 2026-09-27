@@ -4,6 +4,14 @@ from fastapi import HTTPException
 from app import rounds
 from app.rounds import _advance, _run_matching, get_current_round, require_preferences_open
 
+# A mentor who finished onboarding and opted into matching - what every mentor in these
+# fixtures is, since these tests are about the round mechanics, not eligibility.
+ELIGIBLE = {
+    "onboarding_completed_at": "2026-09-01T00:00:00+00:00",
+    "visible_to_mentees": True,
+    "matching_opted_in_at": "2026-09-01T00:00:00+00:00",
+}
+
 
 class FakeQuery:
     def __init__(self, rows, on_insert=None, on_update=None, generate_ids=False):
@@ -147,7 +155,7 @@ def test_run_matching_excludes_already_actively_matched_mentees():
                     "locked": True,
                 }
             ],
-            "mentor_profiles": [{"user_id": "mentor-1", "availability_count": 2}],
+            "mentor_profiles": [{"user_id": "mentor-1", "availability_count": 2, **ELIGIBLE}],
         }
     )
 
@@ -172,7 +180,7 @@ def test_run_matching_respects_reduced_mentor_capacity():
             "mentor_preferences": [
                 {"user_id": "mentor-1", "ranked_mentee_ids": ["mentee-c"], "locked": True}
             ],
-            "mentor_profiles": [{"user_id": "mentor-1", "availability_count": 2}],
+            "mentor_profiles": [{"user_id": "mentor-1", "availability_count": 2, **ELIGIBLE}],
         }
     )
 
@@ -206,7 +214,7 @@ def test_advance_from_matching_in_progress_runs_matching_and_publishes_results()
             "mentor_preferences": [
                 {"user_id": "mentor-1", "ranked_mentee_ids": ["mentee-1"], "locked": True}
             ],
-            "mentor_profiles": [{"user_id": "mentor-1", "availability_count": 1}],
+            "mentor_profiles": [{"user_id": "mentor-1", "availability_count": 1, **ELIGIBLE}],
         }
     )
     result = _advance(fake, {"id": "r1", "status": "matching_in_progress"})
@@ -231,7 +239,7 @@ def _single_new_match_fixture():
         "mentor_preferences": [
             {"user_id": "mentor-1", "ranked_mentee_ids": ["mentee-1"], "locked": True}
         ],
-        "mentor_profiles": [{"user_id": "mentor-1", "availability_count": 1}],
+        "mentor_profiles": [{"user_id": "mentor-1", "availability_count": 1, **ELIGIBLE}],
     }
 
 

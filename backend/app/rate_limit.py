@@ -48,3 +48,33 @@ def rate_limit(name: str, max_calls: int, window_seconds: float):
         return user_id
 
     return dependency
+
+
+def rate_limited_user(name: str, max_calls: int, window_seconds: float):
+    """Like rate_limit(), but returns the full Supabase user (with user_metadata) for endpoints
+    that need the caller's role, not just their id."""
+    from .auth import _get_user
+
+    def dependency(authorization: str | None = Header(default=None)):
+        user = _get_user(authorization)
+        if not _check_and_record(
+            _calls, (name, user.id), max_calls, window_seconds, time.monotonic()
+        ):
+            raise HTTPException(
+                status_code=429,
+                detail="You're doing that a lot - please wait a bit and try again.",
+            )
+        return user
+
+    return dependency
+
+
+_ip_calls: dict[tuple[str, str], list[float]] = defaultdict(list)
+
+
+def check_ip_rate_limit(name: str, ip: str, max_calls: int, window_seconds: float) -> None:
+    """Per-IP limit for public, unauthenticated endpoints (like opening an invitation link)."""
+    if not _check_and_record(_ip_calls, (name, ip), max_calls, window_seconds, time.monotonic()):
+        raise HTTPException(
+            status_code=429, detail="Too many requests from this address. Try again later."
+        )

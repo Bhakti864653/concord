@@ -16,7 +16,8 @@ export type NavIconName =
   | "safety"
   | "howitworks"
   | "notifications"
-  | "admin";
+  | "admin"
+  | "invite";
 
 const common = {
   width: 18,
@@ -115,6 +116,14 @@ export default function NavIcon({ name }: { name: NavIconName }) {
         <svg {...common} aria-hidden="true">
           <path d="M6 17h12l-1.5-2V10a4.5 4.5 0 0 0-9 0v5z" />
           <path d="M10.5 20a1.7 1.7 0 0 0 3 0" />
+        </svg>
+      );
+    case "invite":
+      // An envelope: used for invitations, deliberately not the match icon.
+      return (
+        <svg {...common} aria-hidden="true">
+          <rect x="3.5" y="6" width="17" height="12" rx="2" />
+          <path d="m4.5 7.5 7.5 5.5 7.5-5.5" />
         </svg>
       );
     case "admin":

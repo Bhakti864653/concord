@@ -16,6 +16,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 const MENTORSHIP_LINKS = (primaryMatchId: string | null) => [
   { href: "/dashboard", label: "Home", icon: "home" as NavIconName },
   { href: "/preferences", label: "Preferences", icon: "discover" as NavIconName },
+  { href: "/invitations", label: "Invitations", icon: "invite" as NavIconName },
   ...(primaryMatchId
     ? [{ href: `/match/${primaryMatchId}`, label: "Your match", icon: "match" as NavIconName }]
     : []),

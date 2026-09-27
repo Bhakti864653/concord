@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import PageHeader from "@/components/ui/PageHeader";
 import MenteeRanking from "./MenteeRanking";
 import MentorRanking from "./MentorRanking";
+import PotentialMentors from "./PotentialMentors";
+import { OPEN_ENROLLMENT_COPY } from "@/lib/invitations";
+import Link from "next/link";
 
 export default async function PreferencesPage() {
   const supabase = await createClient();
@@ -31,6 +34,16 @@ export default async function PreferencesPage() {
     redirect("/onboarding");
   }
 
+  let mentorJoined = true;
+  if (userType === "mentor") {
+    const { data: participation } = await supabase
+      .from("mentor_profiles")
+      .select("visible_to_mentees, matching_opted_in_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    mentorJoined = Boolean(participation?.visible_to_mentees && participation?.matching_opted_in_at);
+  }
+
   const preferencesTable =
     userType === "mentee" ? "mentee_preferences" : "mentor_preferences";
   const idColumn = userType === "mentee" ? "ranked_mentor_ids" : "ranked_mentee_ids";
@@ -52,9 +65,37 @@ export default async function PreferencesPage() {
         subtitle="We suggested this order from shared goals and lived experience. Reorder however you like, then lock it in when you're ready. You always have the final say."
       />
       {userType === "mentee" ? (
-        <MenteeRanking savedOrder={savedOrder} savedLocked={savedLocked} />
+        <>
+          <section aria-labelledby="available-heading" className="flex flex-col gap-4">
+            <div className="flex max-w-2xl flex-col gap-1.5">
+              <h2
+                id="available-heading"
+                className="font-display text-2xl font-semibold tracking-tight text-ink"
+              >
+                Available on Concord
+              </h2>
+              <p className="text-sm text-muted">
+                These mentors have joined Concord and are currently participating in mentorship
+                matching.
+              </p>
+            </div>
+            <MenteeRanking savedOrder={savedOrder} savedLocked={savedLocked} />
+          </section>
+          <PotentialMentors />
+          <p className="max-w-2xl text-xs text-muted">{OPEN_ENROLLMENT_COPY}</p>
+        </>
       ) : (
-        <MentorRanking savedOrder={savedOrder} savedLocked={savedLocked} />
+        <>
+          {!mentorJoined && (
+            <p className="rounded-[var(--radius-card)] border border-mentor/30 bg-mentor-tint p-4 text-sm text-ink">
+              Mentees can&apos;t see or rank you yet.{" "}
+              <Link href="/onboarding/mentor" className="focus-ring rounded font-medium underline">
+                Finish joining matching
+              </Link>
+            </p>
+          )}
+          <MentorRanking savedOrder={savedOrder} savedLocked={savedLocked} />
+        </>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "@/components/Logo";
@@ -11,8 +11,16 @@ import PageTransition from "@/components/PageTransition";
 
 type UserType = "mentee" | "mentor";
 
-export default function SignupPage() {
-  const [userType, setUserType] = useState<UserType>("mentee");
+export default function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ role?: string }>;
+}) {
+  const params = use(searchParams);
+  // An invitation link sends people here with ?role=mentor; they can still change it.
+  const [userType, setUserType] = useState<UserType>(
+    params.role === "mentor" ? "mentor" : "mentee",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

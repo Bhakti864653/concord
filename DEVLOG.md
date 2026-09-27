@@ -74,7 +74,21 @@ Before treating any phase of this as finished, I went back through every backend
 
 **What I learned:** this class of bug is invisible in code review (it typechecks, it *looks* like it should work) and invisible in the browser console (no error) - the only tell is the actual rendered page missing a style that should be there. Worth specifically distrusting any Tailwind class built via string interpolation rather than a literal, and checking for the pattern (`` `...-${var}` `` inside a `className`) the same way the `.maybe_single()` guard pattern got checked for across the codebase on an earlier project.
 
+## Invitations exposed that "has a mentor profile" was the whole consent model
+
+**Starting point:** adding a way to invite people who aren't on Concord yet sounded like a UI feature. Auditing the matching queries first showed a bigger gap: `suggested-mentors`, preference saving, and the matching run all read *every* row in `mentor_profiles`. Creating a profile was, silently, consent to being shown and matched. There was also no notion of joining a specific round, so a mentor who signed up mid-round could land in a round whose preferences were already locked.
+
+**Fix:** explicit participation columns on `mentor_profiles` (onboarding completed, consent to be shown, opted-in time, suspended), writable only by the backend - signed-in users lost insert/update rights on exactly those columns. One function, `is_mentor_eligible`, is now the only definition of "may be shown, ranked, or matched", and it compares the opt-in time with the round's `locked_at`, so joining late means joining the next round with no extra table. `guard_matching_inputs` runs right before Gale-Shapley and raises instead of filtering if anything ineligible arrives, so a future bug fails loudly rather than quietly matching someone who never agreed. The algorithm itself didn't change.
+
+**Invitation tokens:** the link carries a 32-byte random token; only its sha256 is stored. Since the raw token can't be shown again, "copy link" in the invitations list issues a *new* link and the old one stops working. Claiming is a conditional update on the token hash still being present, so two simultaneous claims can't both succeed. Every unusable link - unknown, expired, revoked, declined, used - gets the same response.
+
+**Existing mentors:** they joined when creating a profile *was* joining, so the migration marks them as already opted in rather than silently dropping them from matching. New mentors must opt in explicitly.
+
+**What I learned:** a feature about *adding* people to a system is a good moment to check who the system already assumes has agreed to be in it.
+
 ## Known limitations, deliberately left as-is
 
 - **`/matching/suggested-mentors` and `/matching/suggested-mentees` load every profile on the other side into memory and score them one by one.** Fine at the scale this app will ever actually run at (a handful of real users), but it's an O(n) full-table scan with no pagination - a real production version serving many users would need to page this or push the scoring into the database.
 - **The in-memory rate limiter resets on every backend restart** (Render's free tier restarts idle instances) and doesn't share state across multiple instances. Acceptable for a single free-tier instance with no paid API cost at stake; a real multi-instance deployment would need a shared store like Redis.
+- **Invitations are link-only.** No email provider is configured, so Concord never emails anyone; the inviter shares the link. The "sent" status exists for a future provider but is never set today.
+- **There is no suspension UI.** `mentor_profiles.suspended_at` is honored everywhere but can only be set by the operator in the database.

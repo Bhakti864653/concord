@@ -190,8 +190,20 @@ export default async function DashboardPage() {
       : primaryMatch.profile.seeking_guidance_on
     : null;
 
+  // A mentor profile alone isn't participation: mentees only see mentors who opted in.
+  const mentorNotJoined =
+    !isMentee && !(ownProfile.visible_to_mentees && ownProfile.matching_opted_in_at);
+
   return (
     <div className="mx-auto flex w-full max-w-[1220px] flex-col gap-6">
+      {mentorNotJoined && (
+        <p className="rounded-[var(--radius-card)] border border-mentor/30 bg-mentor-tint p-4 text-sm text-ink">
+          Mentees can&apos;t see or rank you yet.{" "}
+          <Link href="/onboarding/mentor" className="focus-ring rounded font-medium underline">
+            Finish joining matching
+          </Link>
+        </p>
+      )}
       {/* Contextual heading - answers "what should I do today," not a
           restatement of round status (that still lives just below, smaller,
           only when there's actually something round-related to say). */}

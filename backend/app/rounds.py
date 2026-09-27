@@ -3,6 +3,12 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Header, HTTPException
 
 from .auth import require_admin
+from .eligibility import (
+    active_counts_by_mentor,
+    eligible_mentors,
+    guard_matching_inputs,
+    remaining_capacity,
+)
 from .gale_shapley import run_gale_shapley
 from .supabase_client import get_admin_client
 
@@ -35,12 +41,16 @@ def require_preferences_open(admin) -> None:
         )
 
 
-def _run_matching(admin) -> dict:
+def _run_matching(admin, round_row: dict | None = None) -> dict:
     """The actual Gale-Shapley run, scoped to only the currently-unmatched
     pool. Existing active matches are left untouched (only new rows are
     inserted) rather than wiped and recomputed on every run - rounds are
     meant to top up capacity incrementally for whoever is waitlisted, not
-    reshuffle people who are already matched."""
+    reshuffle people who are already matched.
+
+    Only eligible mentors (see eligibility.py) with capacity left enter the
+    run; everyone else is filtered out here, and guard_matching_inputs()
+    refuses to start if anything ineligible slipped through."""
     active_matches = (
         admin.table("matches")
         .select("mentee_user_id, mentor_user_id")
@@ -50,11 +60,7 @@ def _run_matching(admin) -> dict:
         or []
     )
     matched_mentee_ids = {m["mentee_user_id"] for m in active_matches}
-    active_count_by_mentor: dict[str, int] = {}
-    for m in active_matches:
-        active_count_by_mentor[m["mentor_user_id"]] = (
-            active_count_by_mentor.get(m["mentor_user_id"], 0) + 1
-        )
+    active_count_by_mentor = active_counts_by_mentor(active_matches)
 
     mentee_rows = (
         admin.table("mentee_preferences")
@@ -72,24 +78,38 @@ def _run_matching(admin) -> dict:
         .data
         or []
     )
-    mentor_capacity_rows = (
-        admin.table("mentor_profiles").select("user_id, availability_count").execute().data
-        or []
+    mentor_profile_rows = admin.table("mentor_profiles").select("*").execute().data or []
+
+    eligible = eligible_mentors(
+        mentor_profile_rows, round_row, active_count_by_mentor, require_capacity=True
     )
+    eligible_ids = {m["user_id"] for m in eligible}
+
+    from .matching import load_blocked_pairs  # local import: matching imports rounds
+
+    blocked = load_blocked_pairs(admin)
 
     mentee_prefs = {
-        row["user_id"]: row["ranked_mentor_ids"]
+        row["user_id"]: [
+            mentor_id
+            for mentor_id in row["ranked_mentor_ids"]
+            if mentor_id in eligible_ids and (row["user_id"], mentor_id) not in blocked
+        ]
         for row in mentee_rows
         if row["user_id"] not in matched_mentee_ids
     }
-    mentor_prefs = {row["user_id"]: row["ranked_mentee_ids"] for row in mentor_rows}
+    mentor_prefs = {
+        row["user_id"]: row["ranked_mentee_ids"]
+        for row in mentor_rows
+        if row["user_id"] in eligible_ids
+    }
     mentor_capacity = {
-        row["user_id"]: max(
-            0, row["availability_count"] - active_count_by_mentor.get(row["user_id"], 0)
-        )
-        for row in mentor_capacity_rows
+        m["user_id"]: remaining_capacity(m, active_count_by_mentor.get(m["user_id"], 0))
+        for m in eligible
+        if m["user_id"] in mentor_prefs
     }
 
+    guard_matching_inputs(mentee_prefs, mentor_prefs, mentor_capacity, eligible_ids)
     result = run_gale_shapley(mentee_prefs, mentor_prefs, mentor_capacity)
 
     if result:
@@ -125,7 +145,7 @@ def _advance(admin, current: dict) -> dict:
         return {"status": "matching_in_progress"}
 
     if status == "matching_in_progress":
-        result = _run_matching(admin)
+        result = _run_matching(admin, current)
         admin.table("matching_rounds").update(
             {"status": "results_available", "completed_at": now}
         ).eq("id", current["id"]).execute()

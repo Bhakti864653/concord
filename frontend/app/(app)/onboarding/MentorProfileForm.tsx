@@ -45,7 +45,9 @@ export default function MentorProfileForm() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.detail || `Failed (${res.status})`);
       }
-      router.push("/dashboard");
+      // Saving a profile doesn't make anyone visible or matchable: joining matching is its
+      // own explicit step.
+      router.push("/onboarding/mentor");
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");

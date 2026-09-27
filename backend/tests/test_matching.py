@@ -160,6 +160,10 @@ class FakeAdminClient:
 def test_save_preferences_rejects_an_unknown_profile_id(monkeypatch):
     fake = FakeAdminClient(other_table_rows=[{"user_id": "real-mentor"}])
     monkeypatch.setattr(matching, "get_admin_client", lambda: fake)
+    # Which mentors are rankable is covered in test_invitations.py; here it's a given.
+    monkeypatch.setattr(
+        matching, "rankable_mentors", lambda _admin, _uid=None: [{"user_id": "real-mentor"}]
+    )
 
     body = PreferencesIn(ranked_ids=["real-mentor", "made-up-id"])
     with pytest.raises(HTTPException) as exc_info:
@@ -173,6 +177,10 @@ def test_save_preferences_rejects_an_unknown_profile_id(monkeypatch):
 def test_save_preferences_writes_the_ranked_list_keyed_by_caller(monkeypatch):
     fake = FakeAdminClient(other_table_rows=[{"user_id": "real-mentor"}])
     monkeypatch.setattr(matching, "get_admin_client", lambda: fake)
+    # Which mentors are rankable is covered in test_invitations.py; here it's a given.
+    monkeypatch.setattr(
+        matching, "rankable_mentors", lambda _admin, _uid=None: [{"user_id": "real-mentor"}]
+    )
 
     body = PreferencesIn(ranked_ids=["real-mentor"], locked=True)
     _save_preferences(

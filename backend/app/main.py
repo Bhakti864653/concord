@@ -10,8 +10,11 @@ from fastapi.responses import JSONResponse
 from .admin import router as admin_router
 from .ai_explanation import router as ai_explanation_router
 from .demo import router as demo_router
+from .external_directory import router as external_directory_router
+from .invitations import router as invitations_router
 from .match_explanation import router as match_explanation_router
 from .matching import router as matching_router
+from .participation import router as participation_router
 from .profiles import router as profiles_router
 from .rematch import router as rematch_router
 from .reports import router as reports_router
@@ -59,6 +62,9 @@ app.include_router(reports_router)
 app.include_router(rounds_router)
 app.include_router(admin_router)
 app.include_router(demo_router)
+app.include_router(invitations_router)
+app.include_router(participation_router)
+app.include_router(external_directory_router)
 
 
 @app.get("/health")

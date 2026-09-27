@@ -3,8 +3,13 @@ import re
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, field_validator
 
+from .eligibility import (
+    active_counts_by_mentor,
+    blocked_pairs,
+    eligible_mentors,
+)
 from .rate_limit import rate_limit
-from .rounds import require_preferences_open
+from .rounds import get_current_round, require_preferences_open
 from .supabase_client import get_admin_client
 
 router = APIRouter()
@@ -76,6 +81,42 @@ def explain_match(
     return {"shared_words": shared_words, "shared_tags": shared_tags}
 
 
+def load_active_matches(admin) -> list[dict]:
+    return (
+        admin.table("matches")
+        .select("id, mentee_user_id, mentor_user_id")
+        .eq("status", "active")
+        .execute()
+        .data
+        or []
+    )
+
+
+def load_blocked_pairs(admin) -> set[tuple[str, str]]:
+    reports = (
+        admin.table("reports").select("match_id, kind").eq("kind", "block").execute().data or []
+    )
+    if not reports:
+        return set()
+    all_matches = (
+        admin.table("matches").select("id, mentee_user_id, mentor_user_id").execute().data or []
+    )
+    return blocked_pairs(reports, {m["id"]: m for m in all_matches})
+
+
+def rankable_mentors(admin, mentee_id: str | None = None) -> list[dict]:
+    """Mentors a mentee may see and rank right now: eligible for the current round, with capacity
+    left, and not blocked with this mentee. Invitations are a different table and never appear."""
+    round_row = get_current_round(admin)
+    profiles = admin.table("mentor_profiles").select("*").execute().data or []
+    counts = active_counts_by_mentor(load_active_matches(admin))
+    mentors = eligible_mentors(profiles, round_row, counts, require_capacity=True)
+    if mentee_id:
+        blocked = load_blocked_pairs(admin)
+        mentors = [m for m in mentors if (mentee_id, m["user_id"]) not in blocked]
+    return mentors
+
+
 @router.get("/matching/suggested-mentors")
 def suggested_mentors(
     user_id: str = Depends(rate_limit("suggested-mentors", max_calls=60, window_seconds=3600)),
@@ -93,7 +134,7 @@ def suggested_mentors(
     if not mentee:
         raise HTTPException(status_code=404, detail="Create your mentee profile first")
 
-    mentors = admin.table("mentor_profiles").select("*").execute().data or []
+    mentors = rankable_mentors(admin, user_id)
 
     scored = [
         {
@@ -187,10 +228,15 @@ def _save_preferences(
 ) -> None:
     admin = get_admin_client()
 
-    existing_ids = {
-        row["user_id"]
-        for row in (admin.table(other_table).select("user_id").execute().data or [])
-    }
+    if other_table == "mentor_profiles":
+        # A mentee may only rank mentors who are currently rankable - never an invitation,
+        # an unconsented or incomplete profile, or a mentor with no capacity left.
+        existing_ids = {m["user_id"] for m in rankable_mentors(admin, user_id)}
+    else:
+        existing_ids = {
+            row["user_id"]
+            for row in (admin.table(other_table).select("user_id").execute().data or [])
+        }
     unknown = [i for i in body.ranked_ids if i not in existing_ids]
     if unknown:
         raise HTTPException(
